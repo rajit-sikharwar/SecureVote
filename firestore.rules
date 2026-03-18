@@ -1,0 +1,78 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Auth helpers
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // [1] Users Collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      // Only admins can write, or the user themselves during registration
+      // However, for pure safety we allow creation if the user matches their own ID
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update, delete: if isAdmin();
+    }
+
+    // [2] Elections Collection
+    match /elections/{electionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // [3] Candidates Collection
+    match /candidates/{candidateId} {
+      allow read: if isAuthenticated();
+      // Normal users CAN NOT update vote counts directly.
+      // We are simulating this in the app using transaction/batch for simplicity since 
+      // we don't have Cloud Functions. 
+      // In a real production app, vote counting would be a server-side Cloud Function.
+      // For this spec, we will allow updating candidates ONLY if changing voteCount.
+      allow update: if isAuthenticated() && 
+                    ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['voteCount'])));
+      allow create, delete: if isAdmin();
+      // Admin override
+      allow write: if isAdmin();
+    }
+
+    // [4] Votes Collection
+    match /votes/{voteId} {
+      // Users can only read their own votes. Admins cannot read who voted for whom.
+      allow read: if isAuthenticated() && resource.data.voterId == request.auth.uid;
+      
+      // Users can create a vote if it's their own voterId. They can't delete or update it.
+      allow create: if isAuthenticated() && request.resource.data.voterId == request.auth.uid;
+      
+      allow update, delete: if false; // Votes are permanent
+    }
+
+    // [5] Audit Logs
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated(); 
+      allow update, delete: if false; 
+    }
+
+    // [6] Registrations Collection (Pre-registered voters)
+    match /registrations/{registrationEmail} {
+      // Allow pre-registration writes from public users.
+      // setDoc() may be treated as create or update depending on doc existence,
+      // so both are permitted with strict field validation.
+      allow create, update: if
+        request.resource.data.keys().hasOnly(['name', 'email', 'category', 'registeredAt']) &&
+        request.resource.data.name is string && request.resource.data.name.size() >= 2 &&
+        request.resource.data.email is string && request.resource.data.email == registrationEmail &&
+        request.resource.data.category in ['student', 'teacher', 'staff', 'management'];
+      allow read, delete: if isAdmin() || (isAuthenticated() && request.auth.token.email == registrationEmail);
+    }
+  }
+}

@@ -1,0 +1,16 @@
+export const ROUTES = {
+  LANDING:               '/',
+  VOTER_REGISTER:        '/voter-register',
+  ADMIN_LOGIN:           '/admin/login',
+  USER_HOME:             '/home',
+  ELECTION_DETAIL:       '/election/:id',
+  VOTE_CONFIRM:          '/vote/:electionId/:candidateId',
+  MY_VOTES:              '/my-votes',
+  ADMIN_DASHBOARD:       '/admin',
+  ADMIN_ELECTIONS:       '/admin/elections',
+  ADMIN_CREATE_ELECTION: '/admin/elections/create',
+  ADMIN_CANDIDATES:      '/admin/candidates',
+  ADMIN_ADD_CANDIDATE:   '/admin/candidates/add',
+  ADMIN_VOTERS:          '/admin/voters',
+  ADMIN_RESULTS:         '/admin/results',
+};

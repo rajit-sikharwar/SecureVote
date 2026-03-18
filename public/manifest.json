@@ -1,0 +1,12 @@
+{
+  "name": "SecureVote",
+  "short_name": "SecureVote",
+  "description": "Secure digital voting for every organization",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F0C29",
+  "theme_color": "#4F46E5",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
