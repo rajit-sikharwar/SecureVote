@@ -22,7 +22,7 @@ export default function AdminCandidates() {
 
   const [selectedElectionId, setSelectedElectionId] = useState<string>('');
 
-  const { candidates, loading: loadingCandidates } =
+  const { candidates, loading: loadingCandidates, refresh } =
     useCandidates(selectedElectionId, undefined, true);
 
   const [deleting, setDeleting] = useState<Candidate | null>(null);
@@ -34,7 +34,7 @@ export default function AdminCandidates() {
     try {
 
       await deleteCandidate(deleting.id);
-
+      await refresh();
       toast.success('Candidate removed successfully.');
       setDeleting(null);
 

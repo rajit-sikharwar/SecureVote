@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { collection, query, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { db } from '@/firebase';
 import { format } from 'date-fns';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
@@ -8,17 +6,11 @@ import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CategoryBadge } from '@/components/shared/CategoryBadge';
 import { Avatar } from '@/components/ui/Avatar';
-import type { UserCategory } from '@/types';
+import { toDate } from '@/lib/dates';
+import { listUsers } from '@/services/user.service';
+import type { AppUser, UserCategory } from '@/types';
 
-type Voter = {
-  id: string;
-  fullName?: string;
-  email?: string;
-  role?: 'admin' | 'voter';
-  category?: UserCategory;
-  photoURL?: string;
-  registeredAt?: unknown;
-};
+type Voter = AppUser;
 
 export default function AdminVoters() {
 
@@ -27,8 +19,9 @@ export default function AdminVoters() {
   const [search, setSearch] = useState('');
 
   const formatRegisteredAt = (value: unknown): string => {
-    return value instanceof Timestamp
-      ? format(value.toDate(), 'MMM d, yyyy - h:mm a')
+    const date = typeof value === 'string' ? toDate(value) : null;
+    return date
+      ? format(date, 'MMM d, yyyy - h:mm a')
       : 'Unknown';
   };
 
@@ -38,19 +31,7 @@ export default function AdminVoters() {
 
       try {
 
-        const q = query(
-          collection(db, 'users'),
-          orderBy('registeredAt', 'desc'),
-          limit(100)
-        );
-
-        const snapshot = await getDocs(q);
-
-        const data: Voter[] = snapshot.docs.map(doc => ({
-          ...(doc.data() as Omit<Voter, 'id'>),
-          id: doc.id,
-        }));
-
+        const data = await listUsers(100);
         setVoters(data);
 
       } catch (err: unknown) {
@@ -70,7 +51,7 @@ export default function AdminVoters() {
   }, []);
 
   const filteredVoters = voters.filter(v =>
-    v.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+    v.name?.toLowerCase().includes(search.toLowerCase()) ||
     v.email?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -159,7 +140,7 @@ export default function AdminVoters() {
 
                 filteredVoters.map((voter) => (
 
-                  <tr key={voter.id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={voter.uid} className="hover:bg-gray-50/50 transition-colors">
 
                     <td className="px-6 py-4">
 
@@ -167,14 +148,14 @@ export default function AdminVoters() {
 
                         <Avatar
                           src={voter.photoURL}
-                          fallback={voter.fullName || 'V'}
+                          fallback={voter.name || 'V'}
                           size="sm"
                         />
 
                         <div>
 
-                          <div className="font-semibold text-gray-900">
-                            {voter.fullName || 'Anonymous'}
+                            <div className="font-semibold text-gray-900">
+                            {voter.name || 'Anonymous'}
                           </div>
 
                           <div className="text-gray-500 text-xs">

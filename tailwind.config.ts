@@ -6,16 +6,16 @@ export default {
     extend: {
       colors: {
         brand: {
-          50:  '#EEF2FF',
-          100: '#E0E7FF',
-          500: '#6366F1',
-          600: '#4F46E5',
-          700: '#4338CA',
-          900: '#1E1B4B',
+          50: '#ecfeff',
+          100: '#cffafe',
+          500: '#06b6d4',
+          600: '#0891b2',
+          700: '#0e7490',
+          900: '#164e63',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Space Grotesk"', '"Segoe UI"', 'sans-serif'],
       },
       screens: {
         xs: '390px',

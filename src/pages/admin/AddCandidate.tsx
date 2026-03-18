@@ -7,11 +7,9 @@ import { toast } from 'react-hot-toast';
 import { ArrowLeft, Info, Camera, User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useElections } from '@/hooks/useElections';
-import { addCandidate } from '@/services/candidate.service';
+import { addCandidate, countCandidatesByElection } from '@/services/candidate.service';
 import { ROUTES } from '@/constants/routes';
 import { CATEGORIES } from '@/constants/categories';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/firebase';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
@@ -84,14 +82,9 @@ export default function AddCandidate() {
 
     try {
 
-      const q = query(
-        collection(db, 'candidates'),
-        where('electionId', '==', data.electionId)
-      );
+      const candidateCount = await countCandidatesByElection(data.electionId);
 
-      const snap = await getDocs(q);
-
-      if (snap.size >= 10) {
+      if (candidateCount >= 10) {
 
         toast.error('This election has reached the maximum limit of 10 candidates.');
         setLoading(false);

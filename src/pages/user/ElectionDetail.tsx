@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useElections } from '@/hooks/useElections';
 import { useCandidates } from '@/hooks/useCandidates';
 import { hasVoted } from '@/services/vote.service';
+import { toDate } from '@/lib/dates';
 import { ROUTES } from '@/constants/routes';
 import { CandidateCard } from '@/components/shared/CandidateCard';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -101,7 +102,7 @@ export default function ElectionDetail() {
           <div className="flex items-center gap-4 text-xs font-medium text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-100">
             <div className="flex items-center gap-1.5 flex-1 justify-center border-r border-gray-200">
               <Calendar className="h-4 w-4" />
-              <span>{format(election.endDate.toDate(), 'MMM d')}</span>
+              <span>{format(toDate(election.endDate) ?? new Date(), 'MMM d')}</span>
             </div>
             <div className="flex items-center gap-1.5 flex-1 justify-center">
               <Users className="h-4 w-4" />

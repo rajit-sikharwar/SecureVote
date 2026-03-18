@@ -10,11 +10,13 @@ import { ElectionCard } from '@/components/shared/ElectionCard';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { useAuthStore } from '@/store/authStore';
 import type { Election } from '@/types';
 
 export default function AdminElections() {
 
-  const { elections, loading } = useElections();
+  const { elections, loading, refresh } = useElections();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
 
   const [deleting, setDeleting] = useState<Election | null>(null);
@@ -27,6 +29,7 @@ export default function AdminElections() {
     try {
 
       await deleteElection(deleting.id);
+      await refresh();
       toast.success('Election deleted successfully.');
       setDeleting(null);
 
@@ -51,7 +54,8 @@ export default function AdminElections() {
 
       const newStatus = toggling.status === 'active' ? 'closed' : 'active';
 
-      await updateElectionStatus(toggling.id, newStatus);
+      await updateElectionStatus(toggling.id, newStatus, user?.uid);
+      await refresh();
 
       toast.success(
         `Election ${newStatus === 'active' ? 'activated' : 'closed'} successfully.`

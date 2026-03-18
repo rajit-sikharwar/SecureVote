@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useElections } from '@/hooks/useElections';
 import { useCandidates } from '@/hooks/useCandidates';
 import { castVote } from '@/services/vote.service';
-import { getFirebaseError } from '@/lib/errors';
+import { getAppError } from '@/lib/errors';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
@@ -83,7 +83,7 @@ export default function VoteConfirm() {
       } else {
         const message =
           err instanceof Error
-            ? getFirebaseError((err as { code?: string }).code ?? err.message)
+            ? getAppError((err as { code?: string }).code ?? err.message)
             : 'Failed to cast vote';
 
         toast.error(message);

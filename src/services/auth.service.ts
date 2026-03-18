@@ -1,90 +1,39 @@
-import {
-  signInWithRedirect,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  type User,
-} from 'firebase/auth';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc,
-  serverTimestamp,
-  type FieldValue,
-} from 'firebase/firestore';
-import { auth, db, googleProvider } from '@/firebase';
+import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { supabase } from '@/supabase/client';
+import { mapUser } from './mappers';
+import { assertNoError } from './supabase.service';
 import type { AppUser, UserCategory } from '@/types';
-
-const PENDING_KEY = 'sv_google_pending';
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
-// ── Google Sign-In ─────────────────────────────────────────────
+async function getRegistrationByEmail(email: string) {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('*')
+    .eq('email', normalizeEmail(email))
+    .maybeSingle();
+
+  assertNoError(error, 'Failed to load voter registration.');
+  return data;
+}
+
 export async function signInWithGoogle(): Promise<void> {
-  sessionStorage.setItem(PENDING_KEY, '1');
-  await signInWithRedirect(auth, googleProvider);
-}
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'select_account',
+      },
+    },
+  });
 
-export function hasGooglePending(): boolean {
-  return sessionStorage.getItem(PENDING_KEY) === '1';
-}
-
-export function clearGooglePending(): void {
-  sessionStorage.removeItem(PENDING_KEY);
-}
-
-/**
- * Called after redirect back from Google login
- */
-export async function completeGoogleLogin(): Promise<
-  { appUser: AppUser } | 'not_authenticated' | 'not_registered'
-> {
-  await (auth as { authStateReady?: () => Promise<void> }).authStateReady?.();
-
-  const fu = auth.currentUser;
-  if (!fu) return 'not_authenticated';
-
-  const uid = fu.uid;
-  if (!fu.email) {
-    await firebaseSignOut(auth);
-    return 'not_authenticated';
+  if (error) {
+    throw new Error(error.message || 'Unable to start Google sign-in.');
   }
-  const email = normalizeEmail(fu.email);
-
-  const existing = await getUserProfile(uid);
-  if (existing) return { appUser: existing };
-
-  const regSnap = await getDoc(doc(db, 'registrations', email));
-
-  if (!regSnap.exists()) {
-    await firebaseSignOut(auth);
-    return 'not_registered';
-  }
-
-  const rd = regSnap.data() as {
-    name: string;
-    category: UserCategory;
-  };
-
-  const appUser: AppUser = {
-    uid,
-    name: rd.name,
-    email,
-    photoURL: fu.photoURL ?? undefined,
-    role: 'voter',
-    category: rd.category,
-    registeredAt: serverTimestamp() as unknown as FieldValue,
-    isActive: true,
-  };
-
-  await setDoc(doc(db, 'users', uid), appUser);
-  await deleteDoc(doc(db, 'registrations', email));
-
-  return { appUser };
 }
 
-// ── Pre-registration ───────────────────────────────────────────
 export async function preRegisterVoter(
   name: string,
   email: string,
@@ -92,48 +41,157 @@ export async function preRegisterVoter(
 ): Promise<void> {
   const normalizedEmail = normalizeEmail(email);
 
-  await setDoc(doc(db, 'registrations', normalizedEmail), {
-    name: name.trim(),
-    email: normalizedEmail,
-    category,
-    registeredAt: serverTimestamp(),
-  });
+  const { error } = await supabase.from('registrations').upsert(
+    {
+      email: normalizedEmail,
+      name: name.trim(),
+      category,
+    },
+    {
+      onConflict: 'email',
+    }
+  );
+
+  assertNoError(error, 'Failed to register voter.');
 }
 
-// ── ADMIN LOGIN ────────────────────────────────────────────────
-export async function signInAdmin(
-  email: string,
-  password: string
-): Promise<AppUser> {
-  const cred = await signInWithEmailAndPassword(auth, normalizeEmail(email), password);
+export async function signInAdmin(email: string, password: string): Promise<AppUser> {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: normalizeEmail(email),
+    password,
+  });
 
-  const adminDoc = await getDoc(doc(db, 'users', cred.user.uid));
+  if (error) {
+    throw new Error(error.message || 'Unable to sign in.');
+  }
 
-  if (!adminDoc.exists() || adminDoc.data()?.role !== 'admin') {
-    await firebaseSignOut(auth);
+  const appUser = await resolveAuthenticatedUser(data.user);
+
+  if (!appUser || appUser.role !== 'admin') {
+    await signOut();
     throw new Error('Your account is not authorized as an admin.');
   }
 
-  return {
-    uid: cred.user.uid,
-    name: cred.user.displayName ?? 'Admin',
-    email: cred.user.email ?? '',
-    role: 'admin',
-    registeredAt: serverTimestamp() as unknown as FieldValue,
-    isActive: true,
-  };
+  return appUser;
 }
 
-// ── Helpers ────────────────────────────────────────────────────
 export async function getUserProfile(uid: string): Promise<AppUser | null> {
-  const snap = await getDoc(doc(db, 'users', uid));
-  return snap.exists() ? (snap.data() as AppUser) : null;
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', uid)
+    .maybeSingle();
+
+  assertNoError(error, 'Failed to load user profile.');
+  return data ? mapUser(data) : null;
+}
+
+export async function resolveAuthenticatedUser(
+  authUser: SupabaseUser | null
+): Promise<AppUser | null> {
+  if (!authUser) return null;
+
+  const existingUser = await getUserProfile(authUser.id);
+  if (existingUser) return existingUser;
+
+  const email = authUser.email ? normalizeEmail(authUser.email) : '';
+  if (!email) return null;
+
+  const registration = await getRegistrationByEmail(email);
+  if (!registration) return null;
+
+  const insertPayload = {
+    id: authUser.id,
+    full_name: registration.name,
+    email,
+    role: 'voter',
+    category: registration.category,
+    photo_url: authUser.user_metadata.avatar_url ?? null,
+    is_active: true,
+  };
+
+  const { data: insertedUser, error: insertError } = await supabase
+    .from('users')
+    .insert(insertPayload)
+    .select('*')
+    .single();
+
+  assertNoError(insertError, 'Failed to create voter profile.');
+  if (!insertedUser) {
+    throw new Error('Failed to create voter profile.');
+  }
+
+  const { error: deleteError } = await supabase
+    .from('registrations')
+    .delete()
+    .eq('id', registration.id);
+
+  assertNoError(deleteError, 'Failed to finalize voter registration.');
+
+  const { error: auditError } = await supabase.from('audit_logs').insert({
+    action: 'user_registered',
+    performed_by: authUser.id,
+    target_id: authUser.id,
+    metadata: { category: registration.category },
+  });
+
+  assertNoError(auditError, 'Failed to record registration audit log.');
+
+  return mapUser(insertedUser);
+}
+
+export async function updateCurrentUserPhoto(uid: string, photoURL: string): Promise<AppUser> {
+  const { data, error } = await supabase
+    .from('users')
+    .update({ photo_url: photoURL })
+    .eq('id', uid)
+    .select('*')
+    .single();
+
+  assertNoError(error, 'Failed to update profile photo.');
+  if (!data) {
+    throw new Error('Failed to update profile photo.');
+  }
+
+  const { error: auditError } = await supabase.from('audit_logs').insert({
+    action: 'profile_updated',
+    performed_by: uid,
+    target_id: uid,
+    metadata: {},
+  });
+
+  assertNoError(auditError, 'Failed to record profile update.');
+
+  return mapUser(data);
 }
 
 export async function signOut(): Promise<void> {
-  await firebaseSignOut(auth);
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    throw new Error(error.message || 'Unable to sign out.');
+  }
 }
 
-export function onAuthChange(cb: (user: User | null) => void) {
-  return onAuthStateChanged(auth, cb);
+export async function getCurrentSession(): Promise<Session | null> {
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    throw new Error(error.message || 'Unable to restore your session.');
+  }
+
+  return data.session;
+}
+
+export function onAuthChange(
+  cb: (user: SupabaseUser | null, event: AuthChangeEvent) => void
+): () => void {
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((event, session) => {
+    cb(session?.user ?? null, event);
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
 }

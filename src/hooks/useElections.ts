@@ -1,42 +1,36 @@
-import { useEffect, useState } from 'react'
-import { useAuthStore } from '@/store/authStore'
-import { subscribeElectionsForVoter, subscribeAllElections } from '@/services/election.service'
-import type { Election } from '@/types'
+import { useCallback, useEffect, useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import { listElections } from '@/services/election.service';
+import type { Election } from '@/types';
 
 export function useElections() {
+  const { user } = useAuthStore();
+  const [elections, setElections] = useState<Election[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { user } = useAuthStore()
-  const canSubscribe = !!user && (user.role === 'admin' || !!user.category)
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setElections([]);
+      setLoading(false);
+      return;
+    }
 
-  const [elections, setElections] = useState<Election[]>([])
-  const [loading, setLoading] = useState(canSubscribe)
+    setLoading(true);
+
+    try {
+      const data = await listElections(user.role === 'admin' ? undefined : user.category);
+      setElections(data);
+    } catch (error) {
+      console.error('Failed to load elections:', error);
+      setElections([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
-    if (!user || !canSubscribe) {
-      return
-    }
-
-    let unsub: (() => void) | undefined
-
-    if (user.role === 'admin') {
-      unsub = subscribeAllElections((data: Election[]) => {
-        setElections(data)
-        setLoading(false)
-      })
-    } 
-    else if (user.category) {
-      unsub = subscribeElectionsForVoter(user.category, (data: Election[]) => {
-        setElections(data)
-        setLoading(false)
-      })
-    }
-
-    return () => {
-      if (unsub) unsub()
-    }
-
-  }, [user, canSubscribe])
-
-  return { elections: canSubscribe ? elections : [], loading: canSubscribe ? loading : false }
+  return { elections, loading, refresh };
 }

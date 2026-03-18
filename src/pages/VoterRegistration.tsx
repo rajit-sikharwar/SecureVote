@@ -9,7 +9,7 @@ import { preRegisterVoter } from '@/services/auth.service';
 import { CATEGORIES } from '@/constants/categories';
 import { ROUTES } from '@/constants/routes';
 import type { UserCategory } from '@/types';
-import { getFirebaseError } from '@/lib/errors';
+import { getAppError } from '@/lib/errors';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -46,7 +46,7 @@ export default function VoterRegistration() {
           : null;
 
       const message = code
-        ? getFirebaseError(code)
+        ? getAppError(code)
         : err instanceof Error
           ? err.message
           : 'Registration failed. Please try again.';

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { signInAdmin } from '@/services/auth.service';
 import { useAuthStore } from '@/store/authStore';
 import { ROUTES } from '@/constants/routes';
-import { getFirebaseError } from '@/lib/errors';
+import { getAppError } from '@/lib/errors';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -52,7 +52,7 @@ export default function AdminLogin() {
 
       if (err instanceof Error) {
 
-        msg = getFirebaseError(
+        msg = getAppError(
           (err as { code?: string }).code ?? err.message
         );
 

@@ -1,55 +1,63 @@
-import { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/firebase';
-import type { AuditLog } from '@/types';
+import { useCallback, useEffect, useState } from 'react';
+import { listAuditLogs, listUsers } from '@/services/user.service';
+import { listCandidates } from '@/services/candidate.service';
+import { listElections } from '@/services/election.service';
+import type { AuditLog, Candidate, Election } from '@/types';
+
+interface AdminStats {
+  totalElections: number;
+  totalCandidates: number;
+  totalVoters: number;
+  totalVotesCast: number;
+}
+
+const initialStats: AdminStats = {
+  totalElections: 0,
+  totalCandidates: 0,
+  totalVoters: 0,
+  totalVotesCast: 0,
+};
 
 export function useAdminData() {
-  const [stats, setStats] = useState({
-    totalElections: 0,
-    totalCandidates: 0,
-    totalVoters: 0,
-    totalVotesCast: 0
-  });
+  const [stats, setStats] = useState<AdminStats>(initialStats);
   const [recentLogs, setRecentLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    
-    const unsubElections = onSnapshot(collection(db, 'elections'), (snap) => {
-      let votesCount = 0;
-      snap.forEach(d => votesCount += (d.data().totalVotes || 0));
-      
-      setStats(prev => ({ 
-        ...prev, 
-        totalElections: snap.size,
-        totalVotesCast: votesCount 
-      }));
-    });
+  const refresh = useCallback(async () => {
+    setLoading(true);
 
-    const unsubCandidates = onSnapshot(collection(db, 'candidates'), (snap) => {
-      setStats(prev => ({ ...prev, totalCandidates: snap.size }));
-    });
+    try {
+      const [elections, users, logs] = await Promise.all([
+        listElections(),
+        listUsers(250),
+        listAuditLogs(10),
+      ]);
 
-    const unsubUsers = onSnapshot(query(collection(db, 'users')), (snap) => {
-      const voters = snap.docs.filter(d => d.data().role === 'voter');
-      setStats(prev => ({ ...prev, totalVoters: voters.length }));
-    });
-    
-    const unsubLogs = onSnapshot(
-      query(collection(db, 'auditLogs'), orderBy('timestamp', 'desc'), limit(10)),
-      (snap) => {
-        setRecentLogs(snap.docs.map(d => ({ id: d.id, ...d.data() } as AuditLog)));
-        setLoading(false);
-      }
-    );
+      const candidateGroups = await Promise.all(
+        elections.map((election: Election) => listCandidates(election.id))
+      );
 
-    return () => {
-      unsubElections();
-      unsubCandidates();
-      unsubUsers();
-      unsubLogs();
-    };
+      const allCandidates = candidateGroups.flatMap((group: Candidate[]) => group);
+
+      setStats({
+        totalElections: elections.length,
+        totalCandidates: allCandidates.length,
+        totalVoters: users.filter((user) => user.role === 'voter').length,
+        totalVotesCast: elections.reduce((sum, election) => sum + election.totalVotes, 0),
+      });
+      setRecentLogs(logs);
+    } catch (error) {
+      console.error('Failed to load admin dashboard data:', error);
+      setStats(initialStats);
+      setRecentLogs([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { stats, recentLogs, loading };
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { stats, recentLogs, loading, refresh };
 }

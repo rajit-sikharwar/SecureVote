@@ -1,68 +1,49 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Key, Copy, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuthStore } from '@/store/authStore';
-import { useVotes } from '@/hooks/useVotes';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ROUTES } from '@/constants/routes';
-import { getDoc, doc, Timestamp } from 'firebase/firestore';
-import { db } from '@/firebase';
-import type { Vote } from '@/types';
-
-type EnrichedVote = Vote & {
-  electionName: string;
-  candidateName: string;
-};
+import { toDate } from '@/lib/dates';
+import { getUserVotesDetailed } from '@/services/vote.service';
+import type { VoteDetails } from '@/types';
+import { useEffect, useState } from 'react';
 
 export default function MyVotes() {
   const { user } = useAuthStore();
-  const { votes, loading } = useVotes(user?.uid);
   const navigate = useNavigate();
 
-  const [enrichedVotes, setEnrichedVotes] = useState<EnrichedVote[]>([]);
-  const [enriching, setEnriching] = useState(true);
+  const [enrichedVotes, setEnrichedVotes] = useState<VoteDetails[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const formatVoteDate = (castedAt: Vote['castedAt']): string => {
-    return castedAt instanceof Timestamp
-      ? format(castedAt.toDate(), 'PPP')
+  const formatVoteDate = (castedAt: string): string => {
+    const date = toDate(castedAt);
+    return date
+      ? format(date, 'PPP')
       : 'Date unavailable';
   };
 
   useEffect(() => {
-    if (loading || !votes) return;
-
-    if (votes.length === 0) {
-      setEnriching(false);
-      return;
-    }
-
     const fetchDetails = async () => {
+      if (!user?.uid) {
+        setEnrichedVotes([]);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const enriched: EnrichedVote[] = await Promise.all(
-          votes.map(async (v) => {
-            const eDoc = await getDoc(doc(db, 'elections', v.electionId));
-            const cDoc = await getDoc(doc(db, 'candidates', v.candidateId));
-
-            return {
-              ...v,
-              electionName: eDoc.exists() ? (eDoc.data() as { title?: string }).title ?? 'Unknown Election' : 'Unknown Election',
-              candidateName: cDoc.exists() ? (cDoc.data() as { fullName?: string }).fullName ?? 'Unknown Candidate' : 'Unknown Candidate',
-            };
-          })
-        );
-
+        const enriched = await getUserVotesDetailed(user.uid);
         setEnrichedVotes(enriched);
       } catch (err: unknown) {
         console.error(err);
       } finally {
-        setEnriching(false);
+        setLoading(false);
       }
     };
 
-    fetchDetails();
-  }, [votes, loading]);
+    void fetchDetails();
+  }, [user?.uid]);
 
   const CopyableHash = ({ hash }: { hash: string }) => {
     const [copied, setCopied] = useState(false);
@@ -94,7 +75,7 @@ export default function MyVotes() {
     );
   };
 
-  if (loading || enriching) {
+  if (loading) {
     return (
       <div className="p-4 space-y-4">
         <h1 className="text-xl font-bold mb-6">My Votes</h1>

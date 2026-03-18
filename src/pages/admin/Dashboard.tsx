@@ -8,7 +8,7 @@ import { useElections } from '@/hooks/useElections'
 import { CATEGORY_MAP } from '@/constants/categories'
 import type { UserCategory } from '@/types'
 import type { LucideIcon } from 'lucide-react'
-import { Timestamp } from 'firebase/firestore'
+import { toDate } from '@/lib/dates'
 
 interface StatCardProps {
   title: string
@@ -47,7 +47,8 @@ export default function AdminDashboard() {
   const activeElections = elections.filter(e => e.status === 'active')
 
   const formatLogTimestamp = (value: unknown): string => {
-    return value instanceof Timestamp ? format(value.toDate(), 'PP p') : 'Date unavailable'
+    const date = typeof value === 'string' ? toDate(value) : null
+    return date ? format(date, 'PP p') : 'Date unavailable'
   }
 
   if (loadingStats || loadingElections) {

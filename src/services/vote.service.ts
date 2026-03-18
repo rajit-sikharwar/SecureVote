@@ -1,19 +1,8 @@
-import {
-  doc,
-  getDoc,
-  writeBatch,
-  collection,
-  serverTimestamp,
-  increment,
-  query,
-  where,
-  getDocs,
-  orderBy,
-  type FieldValue,
-} from 'firebase/firestore';
-import { db } from '@/firebase';
+import { supabase } from '@/supabase/client';
 import { generateReceiptHash } from '@/lib/crypto';
-import type { Vote, UserCategory } from '@/types';
+import { mapVote } from './mappers';
+import { assertNoError } from './supabase.service';
+import type { UserCategory, Vote, VoteDetails } from '@/types';
 
 export async function castVote(
   voterId: string,
@@ -21,71 +10,66 @@ export async function castVote(
   candidateId: string,
   category: UserCategory
 ): Promise<string> {
-  const voteId = `${voterId}_${electionId}`;
+  const receiptHash = await generateReceiptHash(voterId, electionId, candidateId);
 
-  const existing = await getDoc(doc(db, 'votes', voteId));
-  if (existing.exists()) throw new Error('already-exists');
-
-  const electionSnap = await getDoc(doc(db, 'elections', electionId));
-  if (!electionSnap.exists() || electionSnap.data().status !== 'active') {
-    throw new Error('This election is no longer active.');
-  }
-
-  const receiptHash = await generateReceiptHash(
-    voterId,
-    electionId,
-    candidateId
-  );
-
-  const batch = writeBatch(db);
-
-  batch.set(doc(db, 'votes', voteId), {
-    id: voteId,
-    electionId,
-    candidateId,
-    voterId,
-    category,
-    castedAt: serverTimestamp(),
-    receiptHash,
-  } satisfies Omit<Vote, 'castedAt'> & { castedAt: FieldValue });
-
-  batch.update(doc(db, 'candidates', candidateId), {
-    voteCount: increment(1),
+  const { data, error } = await supabase.rpc('cast_vote_secure', {
+    p_voter_id: voterId,
+    p_election_id: electionId,
+    p_candidate_id: candidateId,
+    p_category: category,
+    p_receipt_hash: receiptHash,
   });
 
-  batch.update(doc(db, 'elections', electionId), {
-    totalVotes: increment(1),
-  });
-
-  batch.set(doc(db, 'auditLogs', `${voteId}_audit`), {
-    action: 'vote_cast',
-    performedBy: voterId,
-    targetId: electionId,
-    timestamp: serverTimestamp(),
-    metadata: { candidateId, category, receiptHash },
-  });
-
-  await batch.commit();
-
-  return receiptHash;
+  assertNoError(error, 'Failed to cast vote.');
+  return data ?? receiptHash;
 }
 
 export async function getUserVotes(voterId: string): Promise<Vote[]> {
-  const q = query(
-    collection(db, 'votes'),
-    where('voterId', '==', voterId),
-    orderBy('castedAt', 'desc')
-  );
+  const { data, error } = await supabase
+    .from('votes')
+    .select('*')
+    .eq('voter_id', voterId)
+    .order('casted_at', { ascending: false });
 
-  const snap = await getDocs(q);
-
-  return snap.docs.map((d) => d.data() as Vote);
+  assertNoError(error, 'Failed to load your votes.');
+  return (data ?? []).map(mapVote);
 }
 
-export async function hasVoted(
-  voterId: string,
-  electionId: string
-): Promise<boolean> {
-  const snap = await getDoc(doc(db, 'votes', `${voterId}_${electionId}`));
-  return snap.exists();
+export async function getUserVotesDetailed(voterId: string): Promise<VoteDetails[]> {
+  const votes = await getUserVotes(voterId);
+
+  const electionIds = [...new Set(votes.map((vote) => vote.electionId))];
+  const candidateIds = [...new Set(votes.map((vote) => vote.candidateId))];
+
+  const [{ data: elections, error: electionsError }, { data: candidates, error: candidatesError }] =
+    await Promise.all([
+      supabase.from('elections').select('id, title').in('id', electionIds),
+      supabase.from('candidates').select('id, full_name').in('id', candidateIds),
+    ]);
+
+  assertNoError(electionsError, 'Failed to load related elections.');
+  assertNoError(candidatesError, 'Failed to load related candidates.');
+
+  const electionMap = new Map((elections ?? []).map((election) => [election.id, election.title]));
+  const candidateMap = new Map(
+    (candidates ?? []).map((candidate) => [candidate.id, candidate.full_name])
+  );
+
+  return votes.map((vote) => ({
+    ...vote,
+    electionName: electionMap.get(vote.electionId) ?? 'Unknown Election',
+    candidateName: candidateMap.get(vote.candidateId) ?? 'Unknown Candidate',
+  }));
+}
+
+export async function hasVoted(voterId: string, electionId: string): Promise<boolean> {
+  const voteId = `${voterId}_${electionId}`;
+
+  const { count, error } = await supabase
+    .from('votes')
+    .select('id', { count: 'exact', head: true })
+    .eq('id', voteId);
+
+  assertNoError(error, 'Failed to check vote status.');
+  return (count ?? 0) > 0;
 }

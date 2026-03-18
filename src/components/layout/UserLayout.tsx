@@ -19,10 +19,10 @@ export default function UserLayout() {
   const currentCategory = CATEGORIES.find(c => c.id === user?.category);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center">
-      <div className="w-full max-w-[430px] bg-white min-h-screen shadow-sm relative flex flex-col">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_28%),linear-gradient(180deg,_#eef6ff_0%,_#f7fbff_100%)] flex justify-center">
+      <div className="w-full max-w-[430px] bg-white/82 min-h-screen shadow-[0_18px_55px_rgba(15,23,42,0.08)] relative flex flex-col backdrop-blur-xl border-x border-white/80">
         {/* Header */}
-        <header className="px-5 py-4 flex items-center justify-between border-b border-gray-100 bg-white sticky top-0 z-10">
+        <header className="px-5 py-4 flex items-center justify-between border-b border-gray-100 bg-white/88 sticky top-0 z-10 backdrop-blur-xl">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">
               SV
@@ -47,7 +47,7 @@ export default function UserLayout() {
         </main>
 
         {/* Bottom Tab Bar */}
-        <nav className="fixed bottom-0 w-full max-w-[430px] bg-white border-t border-gray-200 pb-safe z-20">
+        <nav className="fixed bottom-0 w-full max-w-[430px] bg-white/90 border-t border-gray-200 pb-safe z-20 backdrop-blur-xl">
           <div className="flex items-center justify-around h-16">
             <NavLink
               to={ROUTES.USER_HOME}

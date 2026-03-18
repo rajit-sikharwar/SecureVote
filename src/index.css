@@ -1,11 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+    background:
+      radial-gradient(circle at top, rgba(34, 211, 238, 0.12), transparent 24%),
+      linear-gradient(180deg, #f8fbff 0%, #edf5ff 100%);
+  }
+
+  * {
+    @apply border-slate-200;
+  }
+
   body {
-    @apply antialiased text-gray-900 bg-gray-50;
+    @apply antialiased text-slate-900;
+    font-feature-settings: 'ss01' on, 'cv02' on, 'cv03' on;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  body, #root {
+    min-height: 100vh;
   }
 }
 
@@ -20,12 +38,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #94a3b8;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #64748b;
 }
 
 @supports (padding-bottom: env(safe-area-inset-bottom)) {

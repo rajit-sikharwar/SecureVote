@@ -1,5 +1,3 @@
-import { Timestamp, FieldValue } from 'firebase/firestore';
-
 export type UserCategory = 'student' | 'teacher' | 'staff' | 'management';
 export type UserRole = 'voter' | 'admin';
 export type ElectionStatus = 'active' | 'closed' | 'draft';
@@ -11,7 +9,7 @@ export interface AppUser {
   photoURL?: string;
   role: UserRole;
   category?: UserCategory;
-  registeredAt: Timestamp | FieldValue;
+  registeredAt: string;
   isActive: boolean;
 }
 
@@ -22,9 +20,9 @@ export interface Election {
   status: ElectionStatus;
   eligibleCategories: UserCategory[];
   createdBy: string;
-  createdAt: Timestamp | FieldValue;
-  startDate: Timestamp;
-  endDate: Timestamp;
+  createdAt: string;
+  startDate: string;
+  endDate: string;
   totalVotes: number;
 }
 
@@ -39,7 +37,7 @@ export interface Candidate {
   photoURL?: string;
   voteCount: number;
   addedBy: string;
-  addedAt: Timestamp | FieldValue;
+  addedAt: string;
 }
 
 export interface Vote {
@@ -48,7 +46,7 @@ export interface Vote {
   candidateId: string;
   voterId: string;
   category: UserCategory;
-  castedAt: Timestamp | FieldValue;
+  castedAt: string;
   receiptHash: string;
 }
 
@@ -59,9 +57,15 @@ export interface AuditLog {
     | 'election_created'
     | 'election_closed'
     | 'candidate_added'
-    | 'user_registered';
+    | 'user_registered'
+    | 'profile_updated';
   performedBy: string;
   targetId: string;
-  timestamp: Timestamp | FieldValue;
+  timestamp: string;
   metadata: Record<string, unknown>;
+}
+
+export interface VoteDetails extends Vote {
+  electionName: string;
+  candidateName: string;
 }

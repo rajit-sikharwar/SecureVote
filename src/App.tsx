@@ -1,85 +1,120 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { useEffect } from 'react';
-import { onAuthChange, getUserProfile } from '@/services/auth.service';
+import {
+  getCurrentSession,
+  onAuthChange,
+  resolveAuthenticatedUser,
+  signOut,
+} from '@/services/auth.service';
 import { useAuthStore } from '@/store/authStore';
 import { ROUTES } from '@/constants/routes';
 
-// Pages
-import Landing           from '@/pages/Landing';
-import AdminLogin        from '@/pages/AdminLogin';
-import VoterRegistration from '@/pages/VoterRegistration';
-import UserHome          from '@/pages/user/Home';
-import ElectionDetail    from '@/pages/user/ElectionDetail';
-import VoteConfirm       from '@/pages/user/VoteConfirm';
-import MyVotes           from '@/pages/user/MyVotes';
-import AdminDashboard    from '@/pages/admin/Dashboard';
-import AdminElections    from '@/pages/admin/Elections';
-import CreateElection    from '@/pages/admin/CreateElection';
-import AdminCandidates   from '@/pages/admin/Candidates';
-import AddCandidate      from '@/pages/admin/AddCandidate';
-import AdminVoters       from '@/pages/admin/Voters';
-import AdminResults      from '@/pages/admin/Results';
-
-// Route guards
-import UserRoute  from '@/components/layout/UserRoute';
+import UserRoute from '@/components/layout/UserRoute';
 import AdminRoute from '@/components/layout/AdminRoute';
 import LoadingPage from '@/components/shared/LoadingPage';
+
+const Landing = lazy(() => import('@/pages/Landing'));
+const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
+const VoterRegistration = lazy(() => import('@/pages/VoterRegistration'));
+const UserHome = lazy(() => import('@/pages/user/Home'));
+const ElectionDetail = lazy(() => import('@/pages/user/ElectionDetail'));
+const VoteConfirm = lazy(() => import('@/pages/user/VoteConfirm'));
+const MyVotes = lazy(() => import('@/pages/user/MyVotes'));
+const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
+const AdminElections = lazy(() => import('@/pages/admin/Elections'));
+const CreateElection = lazy(() => import('@/pages/admin/CreateElection'));
+const AdminCandidates = lazy(() => import('@/pages/admin/Candidates'));
+const AddCandidate = lazy(() => import('@/pages/admin/AddCandidate'));
+const AdminVoters = lazy(() => import('@/pages/admin/Voters'));
+const AdminResults = lazy(() => import('@/pages/admin/Results'));
 
 export default function App() {
   const { setUser, setLoading, loading } = useAuthStore();
 
   useEffect(() => {
-    const unsub = onAuthChange(async (firebaseUser) => {
+    let mounted = true;
+
+    const syncUser = async () => {
       try {
-        if (firebaseUser) {
-          const profile = await getUserProfile(firebaseUser.uid);
-          setUser(profile);
-        } else {
-          setUser(null);
+        const session = await getCurrentSession();
+        const appUser = await resolveAuthenticatedUser(session?.user ?? null);
+
+        if (mounted) {
+          setUser(appUser);
+        }
+
+        if (session?.user && !appUser) {
+          await signOut();
         }
       } catch (error) {
-        console.error('Failed to resolve authenticated user profile:', error);
+        console.error('Failed to restore authenticated user profile:', error);
+
+        if (mounted) {
+          setUser(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void syncUser();
+
+    const unsubscribe = onAuthChange(async (authUser) => {
+      try {
+        const appUser = await resolveAuthenticatedUser(authUser);
+        setUser(appUser);
+
+        if (authUser && !appUser) {
+          await signOut();
+        }
+      } catch (error) {
+        console.error('Failed to sync auth state:', error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     });
-    return unsub;
-  }, [setUser, setLoading]);
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, [setLoading, setUser]);
 
   if (loading) return <LoadingPage />;
 
   return (
     <BrowserRouter>
       <Toaster position="top-center" toastOptions={{ duration: 3500 }} />
-      <Routes>
-        {/* Public */}
-        <Route path={ROUTES.LANDING}           element={<Landing />} />
-        <Route path={ROUTES.ADMIN_LOGIN}       element={<AdminLogin />} />
-        <Route path={ROUTES.VOTER_REGISTER}    element={<VoterRegistration />} />
+      <Suspense fallback={<LoadingPage />}>
+        <Routes>
+          <Route path={ROUTES.LANDING} element={<Landing />} />
+          <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLogin />} />
+          <Route path={ROUTES.VOTER_REGISTER} element={<VoterRegistration />} />
 
-        {/* Voter (protected) */}
-        <Route element={<UserRoute />}>
-          <Route path={ROUTES.USER_HOME}       element={<UserHome />} />
-          <Route path={ROUTES.ELECTION_DETAIL} element={<ElectionDetail />} />
-          <Route path={ROUTES.VOTE_CONFIRM}    element={<VoteConfirm />} />
-          <Route path={ROUTES.MY_VOTES}        element={<MyVotes />} />
-        </Route>
+          <Route element={<UserRoute />}>
+            <Route path={ROUTES.USER_HOME} element={<UserHome />} />
+            <Route path={ROUTES.ELECTION_DETAIL} element={<ElectionDetail />} />
+            <Route path={ROUTES.VOTE_CONFIRM} element={<VoteConfirm />} />
+            <Route path={ROUTES.MY_VOTES} element={<MyVotes />} />
+          </Route>
 
-        {/* Admin (protected) */}
-        <Route element={<AdminRoute />}>
-          <Route path={ROUTES.ADMIN_DASHBOARD}       element={<AdminDashboard />} />
-          <Route path={ROUTES.ADMIN_ELECTIONS}       element={<AdminElections />} />
-          <Route path={ROUTES.ADMIN_CREATE_ELECTION} element={<CreateElection />} />
-          <Route path={ROUTES.ADMIN_CANDIDATES}      element={<AdminCandidates />} />
-          <Route path={ROUTES.ADMIN_ADD_CANDIDATE}   element={<AddCandidate />} />
-          <Route path={ROUTES.ADMIN_VOTERS}          element={<AdminVoters />} />
-          <Route path={ROUTES.ADMIN_RESULTS}         element={<AdminResults />} />
-        </Route>
+          <Route element={<AdminRoute />}>
+            <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
+            <Route path={ROUTES.ADMIN_ELECTIONS} element={<AdminElections />} />
+            <Route path={ROUTES.ADMIN_CREATE_ELECTION} element={<CreateElection />} />
+            <Route path={ROUTES.ADMIN_CANDIDATES} element={<AdminCandidates />} />
+            <Route path={ROUTES.ADMIN_ADD_CANDIDATE} element={<AddCandidate />} />
+            <Route path={ROUTES.ADMIN_VOTERS} element={<AdminVoters />} />
+            <Route path={ROUTES.ADMIN_RESULTS} element={<AdminResults />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to={ROUTES.LANDING} replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to={ROUTES.LANDING} replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

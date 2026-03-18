@@ -1,10 +1,12 @@
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { Users, Calendar } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import type { Election } from '@/types';
 import { CATEGORIES } from '@/constants/categories';
+import { toDate } from '@/lib/dates';
 
 interface ElectionCardProps {
   election: Election;
@@ -16,9 +18,11 @@ interface ElectionCardProps {
 export function ElectionCard({ election, hasVoted, onClick, isAdmin }: ElectionCardProps) {
   const isActive = election.status === 'active';
   const isClosed = election.status === 'closed';
+  const endDate = toDate(election.endDate);
 
   return (
-    <Card hoverable className="p-4" onClick={onClick}>
+    <motion.div whileHover={{ y: -6, rotateX: 1.6, rotateY: -1.6 }} transition={{ type: 'spring', stiffness: 240, damping: 18 }}>
+    <Card hoverable className="p-4 border-white/60 bg-white/80 backdrop-blur-xl shadow-[0_18px_45px_rgba(15,23,42,0.08)]" onClick={onClick}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex gap-2 items-center flex-wrap">
           {isActive ? (
@@ -61,7 +65,7 @@ export function ElectionCard({ election, hasVoted, onClick, isAdmin }: ElectionC
         </div>
         <div className="flex items-center gap-1.5">
           <Calendar className="h-4 w-4" />
-          <span>{format(election.endDate.toDate(), 'MMM d, yyyy')}</span>
+          <span>{endDate ? format(endDate, 'MMM d, yyyy') : 'Date unavailable'}</span>
         </div>
       </div>
 
@@ -79,5 +83,6 @@ export function ElectionCard({ election, hasVoted, onClick, isAdmin }: ElectionC
         </div>
       )}
     </Card>
+    </motion.div>
   );
 }

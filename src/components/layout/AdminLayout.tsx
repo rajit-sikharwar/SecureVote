@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Vote, Users, UserCheck, BarChart3, Camera } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { signOut } from '@/services/auth.service';
+import { signOut, updateCurrentUserPhoto } from '@/services/auth.service';
 import { ROUTES } from '@/constants/routes';
 import { Avatar } from '../ui/Avatar';
 import { cn } from '@/lib/cn';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/firebase';
 import { toast } from 'react-hot-toast';
 import ProfilePictureModal from '@/components/shared/ProfilePictureModal';
 
@@ -32,13 +30,13 @@ export default function AdminLayout() {
   /** Called by ProfilePictureModal with the cropped base64 JPEG string. */
   const handleSavePhoto = async (base64: string) => {
     if (!user) return;
-    await updateDoc(doc(db, 'users', user.uid), { photoURL: base64 });
-    useAuthStore.getState().setUser({ ...user, photoURL: base64 });
+    const updatedUser = await updateCurrentUserPhoto(user.uid, base64);
+    useAuthStore.getState().setUser(updatedUser);
     toast.success('Profile picture updated!');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.1),_transparent_28%),linear-gradient(180deg,_#f8fbff_0%,_#eef4ff_100%)] flex">
       {/* Desktop Sidebar (md+) */}
       <aside className="hidden md:flex flex-col w-[220px] fixed inset-y-0 left-0 bg-white border-r border-gray-200 z-20">
         <div className="p-6 flex items-center gap-3">
