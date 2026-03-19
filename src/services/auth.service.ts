@@ -2,59 +2,109 @@ import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/s
 import { supabase } from '@/supabase/client';
 import { mapUser } from './mappers';
 import { assertNoError } from './supabase.service';
-import type { AppUser, UserCategory } from '@/types';
+import type { AppUser, RegistrationData } from '@/types';
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
-async function getRegistrationByEmail(email: string) {
-  const { data, error } = await supabase
-    .from('registrations')
-    .select('*')
-    .eq('email', normalizeEmail(email))
-    .maybeSingle();
+/**
+ * Register a new student with complete academic information
+ */
+export async function registerStudent(
+  data: RegistrationData,
+  password: string
+): Promise<void> {
+  const normalizedEmail = normalizeEmail(data.email);
 
-  assertNoError(error, 'Failed to load voter registration.');
-  return data;
+  // Create auth user
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: normalizedEmail,
+    password,
+  });
+
+  if (authError) {
+    throw new Error(authError.message || 'Failed to create account.');
+  }
+
+  if (!authData.user) {
+    throw new Error('Failed to create account.');
+  }
+
+  // Create user profile with complete academic information
+  const { error: profileError } = await supabase.from('users').insert({
+    id: authData.user.id,
+    email: normalizedEmail,
+    full_name: data.fullName.trim(),
+    phone: data.phone.trim(),
+    date_of_birth: data.dateOfBirth,
+    gender: data.gender,
+    address: data.address.trim(),
+    college_name: data.collegeName.trim(),
+    enrollment_number: data.enrollmentNumber.trim(),
+    roll_number: data.rollNumber.trim(),
+    admission_year: data.admissionYear,
+    course: data.course,
+    year: data.year,
+    section: data.section,
+    role: 'student',
+    is_active: true,
+  });
+
+  if (profileError) {
+    // If profile creation fails, try to clean up auth user (best effort)
+    await supabase.auth.admin.deleteUser(authData.user.id).catch(() => {});
+
+    if (profileError.code === '23505') {
+      if (profileError.message.includes('enrollment_number')) {
+        throw new Error('This enrollment number is already registered.');
+      }
+      if (profileError.message.includes('email')) {
+        throw new Error('This email is already registered.');
+      }
+    }
+
+    assertNoError(profileError, 'Failed to create student profile.');
+  }
+
+  // Log the action
+  await supabase.from('audit_logs').insert({
+    action: 'user_registered',
+    performed_by: authData.user.id,
+    target_id: authData.user.id,
+    metadata: {
+      course: data.course,
+      year: data.year,
+      section: data.section,
+      enrollmentNumber: data.enrollmentNumber,
+    },
+  });
 }
 
-export async function signInWithGoogle(): Promise<void> {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin,
-      queryParams: {
-        access_type: 'offline',
-        prompt: 'select_account',
-      },
-    },
+/**
+ * Sign in student with email and password
+ */
+export async function signInStudent(email: string, password: string): Promise<AppUser> {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: normalizeEmail(email),
+    password,
   });
 
   if (error) {
-    throw new Error(error.message || 'Unable to start Google sign-in.');
+    throw new Error(error.message || 'Unable to sign in.');
   }
+
+  const appUser = await getUserProfile(data.user.id);
+
+  if (!appUser || appUser.role !== 'student') {
+    await signOut();
+    throw new Error('Invalid student account.');
+  }
+
+  return appUser;
 }
 
-export async function preRegisterVoter(
-  name: string,
-  email: string,
-  category: UserCategory
-): Promise<void> {
-  const normalizedEmail = normalizeEmail(email);
-
-  const { error } = await supabase.from('registrations').upsert(
-    {
-      email: normalizedEmail,
-      name: name.trim(),
-      category,
-    },
-    {
-      onConflict: 'email',
-    }
-  );
-
-  assertNoError(error, 'Failed to register voter.');
-}
-
+/**
+ * Sign in admin with email and password
+ */
 export async function signInAdmin(email: string, password: string): Promise<AppUser> {
   const { data, error } = await supabase.auth.signInWithPassword({
     email: normalizeEmail(email),
@@ -65,7 +115,7 @@ export async function signInAdmin(email: string, password: string): Promise<AppU
     throw new Error(error.message || 'Unable to sign in.');
   }
 
-  const appUser = await resolveAuthenticatedUser(data.user);
+  const appUser = await getUserProfile(data.user.id);
 
   if (!appUser || appUser.role !== 'admin') {
     await signOut();
@@ -75,6 +125,9 @@ export async function signInAdmin(email: string, password: string): Promise<AppU
   return appUser;
 }
 
+/**
+ * Get user profile by ID
+ */
 export async function getUserProfile(uid: string): Promise<AppUser | null> {
   const { data, error } = await supabase
     .from('users')
@@ -86,60 +139,19 @@ export async function getUserProfile(uid: string): Promise<AppUser | null> {
   return data ? mapUser(data) : null;
 }
 
+/**
+ * Resolve authenticated user
+ */
 export async function resolveAuthenticatedUser(
   authUser: SupabaseUser | null
 ): Promise<AppUser | null> {
   if (!authUser) return null;
-
-  const existingUser = await getUserProfile(authUser.id);
-  if (existingUser) return existingUser;
-
-  const email = authUser.email ? normalizeEmail(authUser.email) : '';
-  if (!email) return null;
-
-  const registration = await getRegistrationByEmail(email);
-  if (!registration) return null;
-
-  const insertPayload = {
-    id: authUser.id,
-    full_name: registration.name,
-    email,
-    role: 'voter',
-    category: registration.category,
-    photo_url: authUser.user_metadata.avatar_url ?? null,
-    is_active: true,
-  };
-
-  const { data: insertedUser, error: insertError } = await supabase
-    .from('users')
-    .insert(insertPayload)
-    .select('*')
-    .single();
-
-  assertNoError(insertError, 'Failed to create voter profile.');
-  if (!insertedUser) {
-    throw new Error('Failed to create voter profile.');
-  }
-
-  const { error: deleteError } = await supabase
-    .from('registrations')
-    .delete()
-    .eq('id', registration.id);
-
-  assertNoError(deleteError, 'Failed to finalize voter registration.');
-
-  const { error: auditError } = await supabase.from('audit_logs').insert({
-    action: 'user_registered',
-    performed_by: authUser.id,
-    target_id: authUser.id,
-    metadata: { category: registration.category },
-  });
-
-  assertNoError(auditError, 'Failed to record registration audit log.');
-
-  return mapUser(insertedUser);
+  return await getUserProfile(authUser.id);
 }
 
+/**
+ * Update user profile photo
+ */
 export async function updateCurrentUserPhoto(uid: string, photoURL: string): Promise<AppUser> {
   const { data, error } = await supabase
     .from('users')
@@ -153,18 +165,19 @@ export async function updateCurrentUserPhoto(uid: string, photoURL: string): Pro
     throw new Error('Failed to update profile photo.');
   }
 
-  const { error: auditError } = await supabase.from('audit_logs').insert({
+  await supabase.from('audit_logs').insert({
     action: 'profile_updated',
     performed_by: uid,
     target_id: uid,
     metadata: {},
   });
 
-  assertNoError(auditError, 'Failed to record profile update.');
-
   return mapUser(data);
 }
 
+/**
+ * Sign out current user
+ */
 export async function signOut(): Promise<void> {
   const { error } = await supabase.auth.signOut();
   if (error) {
@@ -172,6 +185,9 @@ export async function signOut(): Promise<void> {
   }
 }
 
+/**
+ * Get current session
+ */
 export async function getCurrentSession(): Promise<Session | null> {
   const { data, error } = await supabase.auth.getSession();
 
@@ -182,6 +198,9 @@ export async function getCurrentSession(): Promise<Session | null> {
   return data.session;
 }
 
+/**
+ * Listen to auth state changes
+ */
 export function onAuthChange(
   cb: (user: SupabaseUser | null, event: AuthChangeEvent) => void
 ): () => void {

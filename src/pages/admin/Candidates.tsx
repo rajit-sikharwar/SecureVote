@@ -1,229 +1,266 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { useElections } from '@/hooks/useElections';
-import { useCandidates } from '@/hooks/useCandidates';
-import { deleteCandidate } from '@/services/candidate.service';
+import { listAllCandidates, deleteCandidate } from '@/services/candidate.service';
 import { ROUTES } from '@/constants/routes';
+import { COURSES, SECTIONS } from '@/constants/academic';
 import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
 import { Avatar } from '@/components/ui/Avatar';
-import { CategoryBadge } from '@/components/shared/CategoryBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { Skeleton } from '@/components/ui/Skeleton';
-import type { Candidate } from '@/types';
+import { getCourseInfo } from '@/constants/academic';
+import type { Candidate, Course, Section } from '@/types';
 
 export default function AdminCandidates() {
-
   const navigate = useNavigate();
-  const { elections, loading: loadingElections } = useElections();
 
-  const [selectedElectionId, setSelectedElectionId] = useState<string>('');
-
-  const { candidates, loading: loadingCandidates, refresh } =
-    useCandidates(selectedElectionId, undefined, true);
-
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<Candidate | null>(null);
 
-  const handleDelete = async () => {
+  // Filters
+  const [filterCourse, setFilterCourse] = useState<string>('');
+  const [filterSection, setFilterSection] = useState<string>('');
 
+  const loadCandidates = async () => {
+    setLoading(true);
+    try {
+      const data = await listAllCandidates();
+      setCandidates(data);
+    } catch (error) {
+      console.error('Failed to load candidates:', error);
+      toast.error('Failed to load candidates');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCandidates();
+  }, []);
+
+  const handleDelete = async () => {
     if (!deleting) return;
 
     try {
-
       await deleteCandidate(deleting.id);
-      await refresh();
-      toast.success('Candidate removed successfully.');
+      await loadCandidates();
+      toast.success('Candidate profile deleted successfully.');
       setDeleting(null);
-
     } catch (err: unknown) {
-
       const message =
         err instanceof Error
           ? err.message
           : 'Error deleting candidate';
 
       toast.error(message);
-
     }
-
   };
 
-  const electionOptions = elections.map(e => ({
-    value: e.id,
-    label: e.title + (e.status !== 'active' ? ` (${e.status})` : '')
-  }));
+  // Filter candidates
+  const filteredCandidates = candidates.filter(c => {
+    if (filterCourse && c.course !== filterCourse) return false;
+    if (filterSection && c.section !== filterSection) return false;
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton variant="card" className="h-16" />
+        <Skeleton variant="card" className="h-16" />
+        <Skeleton variant="card" className="h-16" />
+      </div>
+    );
+  }
 
   return (
-
     <div className="space-y-6">
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-
-        <h1 className="text-2xl font-bold text-gray-900">
-          Candidates
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Candidate Profiles
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {candidates.length} total candidate{candidates.length !== 1 ? 's' : ''} • {filteredCandidates.length} shown
+          </p>
+        </div>
 
         <Button
           variant="primary"
           leftIcon={<Plus className="h-4 w-4" />}
           onClick={() => navigate(ROUTES.ADMIN_ADD_CANDIDATE)}
         >
-          Add Candidate
+          Create Candidate Profile
         </Button>
-
       </div>
 
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm max-w-md">
-
-        <Select
-          label="Filter by Election"
-          value={selectedElectionId}
-          onChange={(e) => setSelectedElectionId(e.target.value)}
-          options={electionOptions}
-        />
-
-      </div>
-
-      {!selectedElectionId ? (
-
-        <EmptyState
-          title="Select an Election"
-          description="Please select an election from the dropdown above to view or manage its candidates."
-        />
-
-      ) : loadingElections || loadingCandidates ? (
-
-        <div className="space-y-4 pt-4">
-          <Skeleton variant="card" className="h-16" />
-          <Skeleton variant="card" className="h-16" />
-          <Skeleton variant="card" className="h-16" />
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <Filter className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">Filters</span>
         </div>
 
-      ) : candidates.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Course
+            </label>
+            <select
+              value={filterCourse}
+              onChange={(e) => setFilterCourse(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">All Courses</option>
+              {COURSES.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Section
+            </label>
+            <select
+              value={filterSection}
+              onChange={(e) => setFilterSection(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">All Sections</option>
+              {SECTIONS.map((section) => (
+                <option key={section.value} value={section.value}>
+                  {section.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(filterCourse || filterSection) && (
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setFilterCourse('');
+                  setFilterSection('');
+                }}
+                className="h-11 px-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {filteredCandidates.length === 0 ? (
         <EmptyState
-          title="No Candidates Found"
-          description="There are no candidates registered for this election yet."
-          actionLabel="Add Candidate"
-          onAction={() => navigate(ROUTES.ADMIN_ADD_CANDIDATE)}
+          title={candidates.length === 0 ? "No Candidate Profiles" : "No Candidates Match Filters"}
+          description={
+            candidates.length === 0
+              ? "Create candidate profiles that can be reused across multiple elections."
+              : "Try adjusting your filters to see more candidates."
+          }
+          actionLabel={candidates.length === 0 ? "Create First Candidate" : undefined}
+          onAction={candidates.length === 0 ? () => navigate(ROUTES.ADMIN_ADD_CANDIDATE) : undefined}
         />
-
       ) : (
-
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-
           <div className="overflow-x-auto">
-
             <table className="w-full text-left text-sm whitespace-nowrap">
-
               <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 font-medium">
-
                 <tr>
                   <th className="px-6 py-4">Candidate</th>
-                  <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Department</th>
-                  <th className="px-6 py-4 text-center">Votes</th>
+                  <th className="px-6 py-4">Academic Info</th>
+                  <th className="px-6 py-4">Description</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
-
               </thead>
 
               <tbody className="divide-y divide-gray-100">
+                {filteredCandidates.map((candidate) => {
+                  const courseInfo = getCourseInfo(candidate.course);
 
-                {candidates.map((candidate) => (
+                  return (
+                    <tr
+                      key={candidate.id}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            src={candidate.photoURL}
+                            fallback={candidate.name}
+                            size="sm"
+                          />
 
-                  <tr
-                    key={candidate.id}
-                    className="hover:bg-gray-50/50 transition-colors"
-                  >
+                          <span className="font-semibold text-gray-900">
+                            {candidate.name}
+                          </span>
+                        </div>
+                      </td>
 
-                    <td className="px-6 py-4">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            {courseInfo?.label || candidate.course}
+                          </span>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-xs text-gray-600">
+                            Year {candidate.year}
+                          </span>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-xs text-gray-600">
+                            Sec {candidate.section}
+                          </span>
+                        </div>
+                      </td>
 
-                      <div className="flex items-center gap-3">
+                      <td className="px-6 py-4">
+                        <p className="text-gray-600 line-clamp-2 max-w-md">
+                          {candidate.description}
+                        </p>
+                      </td>
 
-                        <Avatar
-                          src={candidate.photoURL}
-                          fallback={candidate.fullName}
-                          size="sm"
-                        />
-
-                        <span className="font-semibold text-gray-900">
-                          {candidate.fullName}
-                        </span>
-
-                      </div>
-
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <CategoryBadge category={candidate.category} />
-                    </td>
-
-                    <td className="px-6 py-4 text-gray-600">
-                      {candidate.department}
-                    </td>
-
-                    <td className="px-6 py-4">
-
-                      <div className="flex justify-center">
-
-                        <span className="px-2.5 py-1 bg-brand-50 text-brand-700 font-bold rounded-lg min-w-[3rem] text-center">
-                          {candidate.voteCount}
-                        </span>
-
-                      </div>
-
-                    </td>
-
-                    <td className="px-6 py-4 text-right">
-
-                      <button
-                        onClick={() => setDeleting(candidate)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Candidate"
-                      >
-
-                        <Trash2 className="h-4 w-4" />
-
-                      </button>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => setDeleting(candidate)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete Candidate"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
-
             </table>
-
           </div>
-
         </div>
-
       )}
 
       <ConfirmDialog
         isOpen={!!deleting}
         onClose={() => setDeleting(null)}
         onConfirm={handleDelete}
-        title="Remove Candidate"
+        title="Delete Candidate Profile"
         message={
           <>
-            Are you sure you want to remove
-            <strong> {deleting?.fullName} </strong>
-            from this election? This action cannot be undone.
+            Are you sure you want to delete the profile for
+            <strong> {deleting?.name}</strong>?
+            <br />
+            <br />
+            This will remove the candidate from all elections they're part of. This action cannot be undone.
           </>
         }
         variant="danger"
-        confirmLabel="Remove Candidate"
+        confirmLabel="Delete Profile"
       />
-
     </div>
-
   );
-
 }

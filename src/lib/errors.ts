@@ -6,6 +6,8 @@ export function getAppError(code: string): string {
     'duplicate key value violates unique constraint "votes_pkey"':
       'You have already voted in this election.',
     'permission-denied': 'You do not have permission for this action.',
+    '42501': 'Database access is being blocked by a Supabase policy.',
+    '23505': 'This email is already registered. Continue with Google sign-in.',
     'JWT expired': 'Your session expired. Please sign in again.',
     'Failed to fetch': 'Unable to reach Supabase. Please check your connection.',
   };

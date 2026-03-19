@@ -34,7 +34,7 @@ export function useAdminData() {
       ]);
 
       const candidateGroups = await Promise.all(
-        elections.map((election: Election) => listCandidates(election.id))
+        elections.map((election: Election) => listCandidates({ electionId: election.id }))
       );
 
       const allCandidates = candidateGroups.flatMap((group: Candidate[]) => group);
@@ -42,8 +42,8 @@ export function useAdminData() {
       setStats({
         totalElections: elections.length,
         totalCandidates: allCandidates.length,
-        totalVoters: users.filter((user) => user.role === 'voter').length,
-        totalVotesCast: elections.reduce((sum, election) => sum + election.totalVotes, 0),
+        totalVoters: users.filter((user) => user.role === 'student').length,
+        totalVotesCast: elections.reduce((sum, election) => sum + (election.totalVotes || 0), 0),
       });
       setRecentLogs(logs);
     } catch (error) {

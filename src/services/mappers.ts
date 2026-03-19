@@ -1,5 +1,5 @@
 import type { Database } from '@/supabase/database.types';
-import type { AppUser, AuditLog, Candidate, Election, Vote } from '@/types';
+import type { AppUser, AuditLog, Candidate, Election, Vote, Course, AcademicYear, Section, Gender } from '@/types';
 
 type UserRow = Database['public']['Tables']['users']['Row'];
 type ElectionRow = Database['public']['Tables']['elections']['Row'];
@@ -10,13 +10,23 @@ type AuditLogRow = Database['public']['Tables']['audit_logs']['Row'];
 export function mapUser(row: UserRow): AppUser {
   return {
     uid: row.id,
-    name: row.full_name,
     email: row.email,
+    fullName: row.full_name,
+    phone: (row as any).phone || '',
+    dateOfBirth: (row as any).date_of_birth || null,
+    gender: ((row as any).gender || 'male') as Gender,
+    address: (row as any).address || '',
+    collegeName: (row as any).college_name || '',
+    enrollmentNumber: (row as any).enrollment_number || '',
+    rollNumber: (row as any).roll_number || '',
+    admissionYear: (row as any).admission_year || new Date().getFullYear(),
+    course: ((row as any).course || 'BCA') as Course,
+    year: ((row as any).year || 1) as AcademicYear,
+    section: ((row as any).section || 'A') as Section,
     photoURL: row.photo_url ?? undefined,
     role: row.role as AppUser['role'],
-    category: (row.category as AppUser['category']) ?? undefined,
-    registeredAt: row.registered_at,
-    isActive: row.is_active,
+    isActive: (row as any).is_active ?? true,
+    createdAt: (row as any).created_at || (row as any).registered_at || new Date().toISOString(),
   };
 }
 
@@ -25,48 +35,50 @@ export function mapElection(row: ElectionRow): Election {
     id: row.id,
     title: row.title,
     description: row.description,
-    status: row.status as Election['status'],
-    eligibleCategories: row.eligible_categories as Election['eligibleCategories'],
-    createdBy: row.created_by,
+    course: ((row as any).course || 'BCA') as Course,
+    year: ((row as any).year || 1) as AcademicYear,
+    section: ((row as any).section || 'A') as Section,
+    startTime: (row as any).start_time || (row as any).start_date || new Date().toISOString(),
+    endTime: (row as any).end_time || (row as any).end_date || new Date().toISOString(),
     createdAt: row.created_at,
-    startDate: row.start_date,
-    endDate: row.end_date,
-    totalVotes: row.total_votes,
+    createdBy: row.created_by,
+    status: (row as any).status || 'active',
+    totalVotes: (row as any).total_votes || 0,
   };
 }
 
 export function mapCandidate(row: CandidateRow): Candidate {
   return {
     id: row.id,
-    electionId: row.election_id,
-    category: row.category as Candidate['category'],
-    fullName: row.full_name,
-    department: row.department,
-    bio: row.bio,
-    manifesto: row.manifesto ?? undefined,
+    name: (row as any).name || (row as any).full_name || 'Unknown',
+    fullName: (row as any).full_name || (row as any).name || 'Unknown',
     photoURL: row.photo_url ?? undefined,
-    voteCount: row.vote_count,
-    addedBy: row.added_by,
-    addedAt: row.added_at,
+    description: (row as any).description || (row as any).bio || '',
+    bio: (row as any).bio || (row as any).description || '',
+    department: (row as any).department || '',
+    course: ((row as any).course || 'BCA') as Course,
+    year: ((row as any).year || 1) as AcademicYear,
+    section: ((row as any).section || 'A') as Section,
+    voteCount: (row as any).vote_count || 0,
+    createdAt: (row as any).created_at || (row as any).added_at || new Date().toISOString(),
   };
 }
 
 export function mapVote(row: VoteRow): Vote {
   return {
     id: row.id,
+    userId: (row as any).user_id || (row as any).voter_id,
     electionId: row.election_id,
     candidateId: row.candidate_id,
-    voterId: row.voter_id,
-    category: row.category as Vote['category'],
-    castedAt: row.casted_at,
-    receiptHash: row.receipt_hash,
+    receiptHash: (row as any).receipt_hash || '',
+    createdAt: (row as any).created_at || (row as any).casted_at || new Date().toISOString(),
   };
 }
 
 export function mapAuditLog(row: AuditLogRow): AuditLog {
   return {
     id: row.id,
-    action: row.action as AuditLog['action'],
+    action: row.action,
     performedBy: row.performed_by,
     targetId: row.target_id,
     timestamp: row.timestamp,

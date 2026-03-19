@@ -23,7 +23,7 @@ export function VoteReceiptModal({ receiptHash, onDone }: VoteReceiptModalProps)
     if (onDone) {
       onDone();
     } else {
-      navigate(ROUTES.USER_HOME, { replace: true });
+      navigate(ROUTES.STUDENT_HOME, { replace: true });
     }
   };
 

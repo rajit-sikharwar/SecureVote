@@ -1,5 +1,18 @@
 -- SecureVote Student-Focused Schema
--- College-level voting management platform
+-- This migration transforms the system into a college-level student voting platform
+
+-- Drop existing tables and start fresh
+drop table if exists public.audit_logs cascade;
+drop table if exists public.votes cascade;
+drop table if exists public.election_candidates cascade;
+drop table if exists public.candidates cascade;
+drop table if exists public.elections cascade;
+drop table if exists public.registrations cascade;
+drop table if exists public.users cascade;
+
+-- Drop existing functions
+drop function if exists public.cast_vote_secure cascade;
+drop function if exists public.is_admin cascade;
 
 -- Enable required extensions
 create extension if not exists "pgcrypto";

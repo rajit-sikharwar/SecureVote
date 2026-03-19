@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { listCandidates } from '@/services/candidate.service';
-import type { Candidate, UserCategory } from '@/types';
+import { getCandidatesForElection } from '@/services/candidate.service';
+import type { Candidate } from '@/types';
 
-export function useCandidates(electionId: string, category?: UserCategory, isAdmin?: boolean) {
+export function useCandidates(electionId: string) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(Boolean(electionId));
 
@@ -16,7 +16,7 @@ export function useCandidates(electionId: string, category?: UserCategory, isAdm
     setLoading(true);
 
     try {
-      const data = await listCandidates(electionId, isAdmin ? undefined : category);
+      const data = await getCandidatesForElection(electionId);
       setCandidates(data);
     } catch (error) {
       console.error('Failed to load candidates:', error);
@@ -24,7 +24,7 @@ export function useCandidates(electionId: string, category?: UserCategory, isAdm
     } finally {
       setLoading(false);
     }
-  }, [category, electionId, isAdmin]);
+  }, [electionId]);
 
   useEffect(() => {
     void refresh();

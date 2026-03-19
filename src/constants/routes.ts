@@ -1,8 +1,8 @@
 export const ROUTES = {
   LANDING:               '/',
-  VOTER_REGISTER:        '/voter-register',
+  STUDENT_REGISTER:      '/register',
   ADMIN_LOGIN:           '/admin/login',
-  USER_HOME:             '/home',
+  STUDENT_HOME:          '/home',
   ELECTION_DETAIL:       '/election/:id',
   VOTE_CONFIRM:          '/vote/:electionId/:candidateId',
   MY_VOTES:              '/my-votes',
@@ -11,6 +11,7 @@ export const ROUTES = {
   ADMIN_CREATE_ELECTION: '/admin/elections/create',
   ADMIN_CANDIDATES:      '/admin/candidates',
   ADMIN_ADD_CANDIDATE:   '/admin/candidates/add',
-  ADMIN_VOTERS:          '/admin/voters',
+  ADMIN_STUDENTS:        '/admin/students',
+  ADMIN_MANAGE_ADMINS:   '/admin/manage-admins',
   ADMIN_RESULTS:         '/admin/results',
 };

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Vote, Users, UserCheck, BarChart3, Camera } from 'lucide-react';
+import { LogOut, LayoutDashboard, Vote, Users, UserCheck, BarChart3, Camera, Shield } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { signOut, updateCurrentUserPhoto } from '@/services/auth.service';
 import { ROUTES } from '@/constants/routes';
@@ -13,7 +13,8 @@ const ADMIN_NAV = [
   { name: 'Dashboard',  to: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
   { name: 'Elections',  to: ROUTES.ADMIN_ELECTIONS, icon: Vote },
   { name: 'Candidates', to: ROUTES.ADMIN_CANDIDATES,icon: Users },
-  { name: 'Voters',     to: ROUTES.ADMIN_VOTERS,    icon: UserCheck },
+  { name: 'Students',   to: ROUTES.ADMIN_STUDENTS, icon: UserCheck },
+  { name: 'Admins',     to: ROUTES.ADMIN_MANAGE_ADMINS, icon: Shield },
   { name: 'Results',    to: ROUTES.ADMIN_RESULTS,   icon: BarChart3 },
 ];
 
@@ -73,13 +74,13 @@ export default function AdminLayout() {
               title="Change profile picture"
               aria-label="Change profile picture"
             >
-              <Avatar src={user?.photoURL} fallback={user?.name || 'A'} size="sm" />
+              <Avatar src={user?.photoURL} fallback={user?.fullName || 'A'} size="sm" />
               <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center rounded-full transition-all">
                 <Camera className="h-3.5 w-3.5 text-white" />
               </div>
             </button>
             <div className="overflow-hidden">
-              <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{user?.fullName}</p>
               <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
           </div>

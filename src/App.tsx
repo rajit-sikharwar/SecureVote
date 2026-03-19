@@ -16,8 +16,8 @@ import LoadingPage from '@/components/shared/LoadingPage';
 
 const Landing = lazy(() => import('@/pages/Landing'));
 const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
-const VoterRegistration = lazy(() => import('@/pages/VoterRegistration'));
-const UserHome = lazy(() => import('@/pages/user/Home'));
+const StudentRegistration = lazy(() => import('@/pages/StudentRegistration'));
+const StudentHome = lazy(() => import('@/pages/user/Home'));
 const ElectionDetail = lazy(() => import('@/pages/user/ElectionDetail'));
 const VoteConfirm = lazy(() => import('@/pages/user/VoteConfirm'));
 const MyVotes = lazy(() => import('@/pages/user/MyVotes'));
@@ -26,7 +26,8 @@ const AdminElections = lazy(() => import('@/pages/admin/Elections'));
 const CreateElection = lazy(() => import('@/pages/admin/CreateElection'));
 const AdminCandidates = lazy(() => import('@/pages/admin/Candidates'));
 const AddCandidate = lazy(() => import('@/pages/admin/AddCandidate'));
-const AdminVoters = lazy(() => import('@/pages/admin/Voters'));
+const AdminStudents = lazy(() => import('@/pages/admin/Students'));
+const ManageAdmins = lazy(() => import('@/pages/admin/ManageAdmins'));
 const AdminResults = lazy(() => import('@/pages/admin/Results'));
 
 export default function App() {
@@ -93,10 +94,10 @@ export default function App() {
         <Routes>
           <Route path={ROUTES.LANDING} element={<Landing />} />
           <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLogin />} />
-          <Route path={ROUTES.VOTER_REGISTER} element={<VoterRegistration />} />
+          <Route path={ROUTES.STUDENT_REGISTER} element={<StudentRegistration />} />
 
           <Route element={<UserRoute />}>
-            <Route path={ROUTES.USER_HOME} element={<UserHome />} />
+            <Route path={ROUTES.STUDENT_HOME} element={<StudentHome />} />
             <Route path={ROUTES.ELECTION_DETAIL} element={<ElectionDetail />} />
             <Route path={ROUTES.VOTE_CONFIRM} element={<VoteConfirm />} />
             <Route path={ROUTES.MY_VOTES} element={<MyVotes />} />
@@ -108,7 +109,8 @@ export default function App() {
             <Route path={ROUTES.ADMIN_CREATE_ELECTION} element={<CreateElection />} />
             <Route path={ROUTES.ADMIN_CANDIDATES} element={<AdminCandidates />} />
             <Route path={ROUTES.ADMIN_ADD_CANDIDATE} element={<AddCandidate />} />
-            <Route path={ROUTES.ADMIN_VOTERS} element={<AdminVoters />} />
+            <Route path={ROUTES.ADMIN_STUDENTS} element={<AdminStudents />} />
+            <Route path={ROUTES.ADMIN_MANAGE_ADMINS} element={<ManageAdmins />} />
             <Route path={ROUTES.ADMIN_RESULTS} element={<AdminResults />} />
           </Route>
 
