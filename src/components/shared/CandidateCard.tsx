@@ -2,6 +2,8 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Avatar } from '../ui/Avatar';
 import { ProgressBar } from '../ui/ProgressBar';
+import { useMemo } from 'react';
+import { formatDepartment, calculatePercentage } from '@/constants/academic';
 import type { Candidate } from '@/types';
 
 interface CandidateCardProps {
@@ -23,8 +25,15 @@ export function CandidateCard({
   onVoteClick,
   onViewBio
 }: CandidateCardProps) {
-  const percent = totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0;
-  const department = `${candidate.course} - Year ${candidate.year}${candidate.section}`;
+  const percent = useMemo(() =>
+    calculatePercentage(voteCount, totalVotes),
+    [voteCount, totalVotes]
+  );
+
+  const department = useMemo(() =>
+    formatDepartment(candidate.course, candidate.year, candidate.section),
+    [candidate.course, candidate.year, candidate.section]
+  );
 
   return (
     <Card className="p-4 flex flex-col h-full border-2 border-transparent transition-colors hover:border-gray-100">

@@ -91,3 +91,14 @@ export function getAdmissionYears(): number[] {
   const currentYear = new Date().getFullYear();
   return Array.from({ length: 10 }, (_, i) => currentYear - i);
 }
+
+// Format department string from course, year, and section
+export function formatDepartment(course: Course, year: AcademicYear, section: Section, useCourseLabel = false): string {
+  const courseDisplay = useCourseLabel ? getCourseInfo(course)?.label || course : course;
+  return `${courseDisplay} - Year ${year}${section}`;
+}
+
+// Calculate percentage safely
+export function calculatePercentage(value: number, total: number): number {
+  return total > 0 ? (value / total) * 100 : 0;
+}

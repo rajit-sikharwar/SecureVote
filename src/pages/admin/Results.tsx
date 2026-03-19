@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useElections } from '@/hooks/useElections';
 import { getElectionResults, getTotalVotesForElection } from '@/services/vote.service';
+import { calculatePercentage } from '@/constants/academic';
 import { Select } from '@/components/ui/Select';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -163,7 +164,7 @@ export default function AdminResults() {
             <div className="space-y-4">
               {sortedResults.map((candidate, index) => {
                 const isWinner = index === 0 && totalVotes > 0;
-                const percent = totalVotes > 0 ? (candidate.voteCount / totalVotes) * 100 : 0;
+                const percent = calculatePercentage(candidate.voteCount, totalVotes);
 
                 return (
                   <div

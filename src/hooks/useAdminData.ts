@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { listAuditLogs, listUsers } from '@/services/user.service';
-import { listCandidates } from '@/services/candidate.service';
+import { getCandidatesForElection } from '@/services/candidate.service';
 import { listElections } from '@/services/election.service';
 import type { AuditLog, Candidate, Election } from '@/types';
 
@@ -34,7 +34,7 @@ export function useAdminData() {
       ]);
 
       const candidateGroups = await Promise.all(
-        elections.map((election: Election) => listCandidates({ electionId: election.id }))
+        elections.map((election: Election) => getCandidatesForElection(election.id))
       );
 
       const allCandidates = candidateGroups.flatMap((group: Candidate[]) => group);
@@ -43,7 +43,7 @@ export function useAdminData() {
         totalElections: elections.length,
         totalCandidates: allCandidates.length,
         totalVoters: users.filter((user) => user.role === 'student').length,
-        totalVotesCast: elections.reduce((sum, election) => sum + (election.totalVotes || 0), 0),
+        totalVotesCast: 0, // TODO: Calculate from vote service if needed
       });
       setRecentLogs(logs);
     } catch (error) {

@@ -5,10 +5,10 @@ export function StatusBadge({ status }: { status: ElectionStatus }) {
   switch (status) {
     case 'active':
       return <Badge variant="success">● Active</Badge>;
-    case 'closed':
-      return <Badge variant="default">Closed</Badge>;
-    case 'draft':
-      return <Badge variant="warning">Draft</Badge>;
+    case 'completed':
+      return <Badge variant="default">Completed</Badge>;
+    case 'upcoming':
+      return <Badge variant="warning">Upcoming</Badge>;
     default:
       return <Badge>{status}</Badge>;
   }
