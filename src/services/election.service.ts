@@ -118,9 +118,8 @@ export async function createElection(data: ElectionCreationData, createdBy: stri
       course: data.course,
       year: data.year,
       section: data.section,
-      start_date: data.startTime,
-      end_date: data.endTime,
-      status: 'active',
+      start_time: data.startTime,
+      end_time: data.endTime,
       created_by: createdBy,
     } as any)
     .select('id')

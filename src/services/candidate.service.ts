@@ -95,9 +95,9 @@ export async function createCandidate(data: CandidateCreationData): Promise<stri
   const { data: candidate, error } = await supabase
     .from('candidates')
     .insert({
-      full_name: data.name.trim(),
+      name: data.name.trim(),
       photo_url: data.photoURL || null,
-      bio: data.description.trim(),
+      description: data.description.trim(),
       course: data.course,
       year: data.year,
       section: data.section,

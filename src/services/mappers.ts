@@ -38,8 +38,8 @@ export function mapElection(row: ElectionRow): Election {
     course: ((row as any).course || 'BCA') as Course,
     year: ((row as any).year || 1) as AcademicYear,
     section: ((row as any).section || 'A') as Section,
-    startTime: (row as any).start_time || (row as any).start_date || new Date().toISOString(),
-    endTime: (row as any).end_time || (row as any).end_date || new Date().toISOString(),
+    startTime: (row as any).start_time || new Date().toISOString(),
+    endTime: (row as any).end_time || new Date().toISOString(),
     createdAt: row.created_at,
     createdBy: row.created_by,
   };
@@ -48,13 +48,13 @@ export function mapElection(row: ElectionRow): Election {
 export function mapCandidate(row: CandidateRow): Candidate {
   return {
     id: row.id,
-    name: (row as any).name || (row as any).full_name || 'Unknown',
+    name: (row as any).name || 'Unknown',
     photoURL: row.photo_url ?? undefined,
-    description: (row as any).description || (row as any).bio || '',
+    description: (row as any).description || '',
     course: ((row as any).course || 'BCA') as Course,
     year: ((row as any).year || 1) as AcademicYear,
     section: ((row as any).section || 'A') as Section,
-    createdAt: (row as any).created_at || (row as any).added_at || new Date().toISOString(),
+    createdAt: (row as any).created_at || new Date().toISOString(),
   };
 }
 
@@ -64,7 +64,7 @@ export function mapVote(row: VoteRow): Vote {
     userId: (row as any).user_id || (row as any).voter_id,
     electionId: row.election_id,
     candidateId: row.candidate_id,
-    createdAt: (row as any).created_at || (row as any).casted_at || new Date().toISOString(),
+    createdAt: (row as any).created_at || new Date().toISOString(),
   };
 }
 
