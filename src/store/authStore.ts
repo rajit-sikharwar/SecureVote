@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type { AppUser } from '@/types';
 
 interface AuthState {
@@ -10,15 +9,11 @@ interface AuthState {
   clearUser:   () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user:       null,
-      loading:    true,
-      setUser:    (user) => set({ user }),
-      setLoading: (loading) => set({ loading }),
-      clearUser:  () => set({ user: null }),
-    }),
-    { name: 'securevote-auth', partialize: (s) => ({ user: s.user }) }
-  )
-);
+// Removed persist middleware - no more auto session restore
+export const useAuthStore = create<AuthState>()((set) => ({
+  user:       null,
+  loading:    false, // Changed to false since we're not loading anything initially
+  setUser:    (user) => set({ user }),
+  setLoading: (loading) => set({ loading }),
+  clearUser:  () => set({ user: null }),
+}));

@@ -28,13 +28,7 @@ export default function Landing() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
 
-  useEffect(() => {
-    if (!user) return;
-
-    navigate(user.role === 'admin' ? ROUTES.ADMIN_DASHBOARD : ROUTES.STUDENT_HOME, {
-      replace: true,
-    });
-  }, [navigate, user]);
+  // Removed auto-redirect useEffect - users must explicitly login
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
@@ -42,6 +36,16 @@ export default function Landing() {
     try {
       await signInStudent(data.email, data.password);
       toast.success('Welcome back!');
+
+      // Manually check user state after login and redirect
+      setTimeout(() => {
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          navigate(currentUser.role === 'admin' ? ROUTES.ADMIN_DASHBOARD : ROUTES.STUDENT_HOME, {
+            replace: true,
+          });
+        }
+      }, 100); // Small delay to ensure state update
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to sign in.';

@@ -36,21 +36,31 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
 
-    const syncUser = async () => {
+    // Clear any existing session storage that might persist login state
+    localStorage.removeItem('securevote-auth');
+    sessionStorage.clear();
+
+    // Only set up auth state change listener, no auto session restore
+    const unsubscribe = onAuthChange(async (authUser) => {
       try {
-        const session = await getCurrentSession();
-        const appUser = await resolveAuthenticatedUser(session?.user ?? null);
+        if (authUser) {
+          // Only resolve user if there's an active auth session
+          const appUser = await resolveAuthenticatedUser(authUser);
+          if (mounted) {
+            setUser(appUser);
+          }
 
-        if (mounted) {
-          setUser(appUser);
-        }
-
-        if (session?.user && !appUser) {
-          await signOut();
+          if (!appUser) {
+            await signOut();
+          }
+        } else {
+          // No auth user, clear state
+          if (mounted) {
+            setUser(null);
+          }
         }
       } catch (error) {
-        console.error('Failed to restore authenticated user profile:', error);
-
+        console.error('Failed to sync auth state:', error);
         if (mounted) {
           setUser(null);
         }
@@ -59,25 +69,10 @@ export default function App() {
           setLoading(false);
         }
       }
-    };
-
-    void syncUser();
-
-    const unsubscribe = onAuthChange(async (authUser) => {
-      try {
-        const appUser = await resolveAuthenticatedUser(authUser);
-        setUser(appUser);
-
-        if (authUser && !appUser) {
-          await signOut();
-        }
-      } catch (error) {
-        console.error('Failed to sync auth state:', error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
     });
+
+    // Set loading to false initially since we're not auto-loading anything
+    setLoading(false);
 
     return () => {
       mounted = false;
