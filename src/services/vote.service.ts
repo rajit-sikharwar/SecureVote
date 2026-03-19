@@ -66,7 +66,7 @@ export async function getUserVotesDetailed(userId: string): Promise<VoteDetails[
   const [{ data: elections, error: electionsError }, { data: candidates, error: candidatesError }] =
     await Promise.all([
       supabase.from('elections').select('id, title').in('id', electionIds),
-      supabase.from('candidates').select('id, name').in('id', candidateIds),
+      supabase.from('candidates').select('id, full_name').in('id', candidateIds),
     ]);
 
   assertNoError(electionsError, 'Failed to load related elections.');
@@ -74,7 +74,7 @@ export async function getUserVotesDetailed(userId: string): Promise<VoteDetails[
 
   const electionMap = new Map((elections ?? []).map((election) => [election.id, election.title]));
   const candidateMap = new Map(
-    (candidates ?? []).map((candidate) => [candidate.id, candidate.name])
+    (candidates ?? []).map((candidate: any) => [candidate.id, candidate.full_name])
   );
 
   return votes.map((vote) => ({
@@ -110,7 +110,7 @@ export async function getElectionResults(electionId: string) {
 
   assertNoError(junctionError, 'Failed to load election candidates.');
 
-  const candidateIds = (junctionData ?? []).map(j => j.candidate_id);
+  const candidateIds = (junctionData || []).map((j: any) => j.candidate_id);
 
   if (candidateIds.length === 0) {
     return [];
@@ -133,15 +133,15 @@ export async function getElectionResults(electionId: string) {
   // Get candidate details
   const { data: candidates, error: candidatesError } = await supabase
     .from('candidates')
-    .select('id, name, photo_url')
+    .select('id, full_name, photo_url')
     .in('id', candidateIds);
 
   assertNoError(candidatesError, 'Failed to load candidates.');
 
   // Combine data
-  return (candidates ?? []).map(candidate => ({
+  return (candidates ?? []).map((candidate: any) => ({
     candidateId: candidate.id,
-    candidateName: candidate.name,
+    candidateName: candidate.full_name,
     photoURL: candidate.photo_url,
     voteCount: voteCounts.get(candidate.id) || 0,
   }));

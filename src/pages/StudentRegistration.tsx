@@ -43,7 +43,6 @@ type Form = z.infer<typeof schema>;
 export default function StudentRegistration() {
   const navigate = useNavigate();
   const [done, setDone] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | ''>('');
 
   const {
     register,
@@ -62,7 +61,7 @@ export default function StudentRegistration() {
   const watchedCourse = watch('course');
 
   // Update allowed years when course changes
-  const allowedYears = selectedCourse ? getAllowedYears(selectedCourse) : [1, 2, 3, 4];
+  const allowedYears = watchedCourse ? getAllowedYears(watchedCourse as Course) : [1, 2, 3, 4];
 
   const onSubmit = async (data: Form) => {
     try {
@@ -374,7 +373,6 @@ export default function StudentRegistration() {
                     {...register('course')}
                     onChange={(e) => {
                       register('course').onChange(e);
-                      setSelectedCourse(e.target.value as Course);
                       // Reset year to 1 when course changes
                       setValue('year', 1);
                     }}

@@ -11,7 +11,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { getCourseInfo } from '@/constants/academic';
-import type { ElectionWithCandidates, Candidate } from '@/types';
+import type { ElectionWithCandidates } from '@/types';
 
 export default function ElectionDetail() {
   const { id } = useParams<{ id: string }>();

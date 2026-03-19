@@ -71,7 +71,7 @@ export async function getCandidatesForElection(electionId: string): Promise<Cand
 
   assertNoError(junctionError, 'Failed to load election candidates.');
 
-  const candidateIds = (junctionData ?? []).map(j => j.candidate_id);
+  const candidateIds = (junctionData || []).map((j: any) => j.candidate_id);
 
   if (candidateIds.length === 0) {
     return [];
@@ -98,12 +98,9 @@ export async function createCandidate(data: CandidateCreationData): Promise<stri
       full_name: data.name.trim(),
       photo_url: data.photoURL || null,
       bio: data.description.trim(),
-      department: data.department || '',
-      manifesto: data.manifesto || null,
       course: data.course,
       year: data.year,
       section: data.section,
-      added_by: data.addedBy || '',
     } as any)
     .select('id')
     .single();

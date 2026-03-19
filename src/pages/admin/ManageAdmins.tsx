@@ -87,27 +87,6 @@ export default function ManageAdmins() {
     }
   };
 
-  const handlePromoteUser = async (email: string) => {
-    try {
-      const { data, error } = await supabase
-        .rpc('promote_to_admin' as any, { user_email: email });
-
-      if (error) throw error;
-
-      const result = data as any;
-
-      if (result?.success) {
-        toast.success('User promoted to admin successfully!');
-        await loadAdmins();
-      } else {
-        toast.error(result?.message || 'Failed to promote user');
-      }
-    } catch (error) {
-      console.error('Error promoting user:', error);
-      toast.error('Failed to promote user to admin');
-    }
-  };
-
   const handleDeleteAdmin = async () => {
     if (!deleting) return;
 

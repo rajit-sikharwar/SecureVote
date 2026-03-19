@@ -61,7 +61,7 @@ export async function getElectionWithCandidates(id: string): Promise<ElectionWit
 
   assertNoError(junctionError, 'Failed to load election candidates.');
 
-  const candidateIds = (junctionData ?? []).map(j => j.candidate_id);
+  const candidateIds = (junctionData || []).map((j: any) => j.candidate_id);
 
   if (candidateIds.length === 0) {
     return { ...election, candidates: [] };

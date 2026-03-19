@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { getCourseInfo } from '@/constants/academic';
-import type { Candidate, Course, Section } from '@/types';
+import type { Candidate } from '@/types';
 
 export default function AdminCandidates() {
   const navigate = useNavigate();

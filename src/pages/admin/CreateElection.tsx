@@ -44,8 +44,6 @@ export default function CreateElection() {
   const [loading, setLoading] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | ''>('');
-  const [selectedYear, setSelectedYear] = useState<number>(1);
-  const [selectedSection, setSelectedSection] = useState<string>('');
   const [filteredCandidates, setFilteredCandidates] = useState<Candidate[]>([]);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<string[]>([]);
 
@@ -242,10 +240,6 @@ export default function CreateElection() {
                 </label>
                 <select
                   {...register('year', { valueAsNumber: true })}
-                  onChange={(e) => {
-                    register('year', { valueAsNumber: true }).onChange(e);
-                    setSelectedYear(parseInt(e.target.value));
-                  }}
                   className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   {allowedYears.map((year) => {
@@ -268,10 +262,6 @@ export default function CreateElection() {
                 </label>
                 <select
                   {...register('section')}
-                  onChange={(e) => {
-                    register('section').onChange(e);
-                    setSelectedSection(e.target.value);
-                  }}
                   className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">Select Section</option>

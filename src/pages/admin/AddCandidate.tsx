@@ -36,7 +36,6 @@ export default function AddCandidate() {
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<FormData>({

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
@@ -24,7 +24,6 @@ interface LoginForm {
 export default function Landing() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuthStore();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
 
