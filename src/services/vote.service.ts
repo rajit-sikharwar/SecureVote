@@ -11,7 +11,7 @@ export async function castVote(
   electionId: string,
   candidateId: string
 ): Promise<void> {
-  const { error } = await supabase.rpc('cast_vote_secure' as any, {
+  const { error } = await supabase.rpc('cast_vote', {
     p_user_id: userId,
     p_election_id: electionId,
     p_candidate_id: candidateId,
@@ -102,6 +102,28 @@ export async function hasVoted(userId: string, electionId: string): Promise<bool
  * Get vote counts for all candidates in an election
  */
 export async function getElectionResults(electionId: string) {
+  // Use the secure database function that bypasses RLS
+  const { data, error } = await supabase.rpc('get_election_results', {
+    p_election_id: electionId,
+  });
+
+  if (error) {
+    // Fallback to direct query if RPC fails (e.g., function doesn't exist yet)
+    return getElectionResultsFallback(electionId);
+  }
+
+  return (data ?? []).map((row: any) => ({
+    candidateId: row.candidate_id,
+    candidateName: row.candidate_name,
+    photoURL: row.photo_url,
+    voteCount: row.vote_count,
+  }));
+}
+
+/**
+ * Fallback function using direct queries (may be affected by RLS)
+ */
+async function getElectionResultsFallback(electionId: string) {
   // Get all candidates for this election
   const { data: junctionData, error: junctionError } = await supabase
     .from('election_candidates')
@@ -116,7 +138,7 @@ export async function getElectionResults(electionId: string) {
     return [];
   }
 
-  // Get vote counts
+  // Get vote counts - query ALL votes for this election
   const { data: voteData, error: voteError } = await supabase
     .from('votes')
     .select('candidate_id')
@@ -151,6 +173,23 @@ export async function getElectionResults(electionId: string) {
  * Get total vote count for an election
  */
 export async function getTotalVotesForElection(electionId: string): Promise<number> {
+  // Use the secure database function that bypasses RLS
+  const { data, error } = await supabase.rpc('get_election_vote_count', {
+    p_election_id: electionId,
+  });
+
+  if (error) {
+    // Fallback to direct query
+    return getTotalVotesForElectionFallback(electionId);
+  }
+
+  return data ?? 0;
+}
+
+/**
+ * Fallback using direct query (may be affected by RLS)
+ */
+async function getTotalVotesForElectionFallback(electionId: string): Promise<number> {
   const { count, error } = await supabase
     .from('votes')
     .select('id', { count: 'exact', head: true })

@@ -207,15 +207,19 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
-      cast_vote_secure: {
+      cast_vote: {
         Args: {
-          p_candidate_id: string;
-          p_category: string;
+          p_user_id: string;
           p_election_id: string;
-          p_receipt_hash: string;
-          p_voter_id: string;
+          p_candidate_id: string;
         };
-        Returns: string;
+        Returns: undefined;
+      };
+      is_admin: {
+        Args: {
+          p_user_id?: string;
+        };
+        Returns: boolean;
       };
     };
     Enums: Record<string, never>;

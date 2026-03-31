@@ -104,7 +104,7 @@ as $$
   select exists (
     select 1
     from public.users
-    where id = p_user_id
+    where id = coalesce(p_user_id, auth.uid())
       and role = 'admin'
       and is_active = true
   );
@@ -263,10 +263,19 @@ on public.votes
 for select
 using (user_id = auth.uid());
 
-create policy "Admins can read all votes"
+-- Enhanced admin policy for vote results
+create policy "Admins can read all votes for results"
 on public.votes
 for select
-using (public.is_admin());
+using (
+  exists (
+    select 1
+    from public.users
+    where users.id = auth.uid()
+      and users.role = 'admin'
+      and users.is_active = true
+  )
+);
 
 -- RLS Policies for audit logs
 create policy "Admins can read audit logs"

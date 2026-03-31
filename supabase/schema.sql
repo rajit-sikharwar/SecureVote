@@ -91,7 +91,7 @@ as $$
   select exists (
     select 1
     from public.users
-    where id = p_user_id
+    where id = coalesce(p_user_id, auth.uid())
       and role = 'admin'
       and is_active = true
   );
@@ -177,6 +177,62 @@ begin
 end;
 $$;
 
+-- Function to get election results (admin only, bypasses RLS)
+create or replace function public.get_election_results(p_election_id uuid)
+returns table (
+  candidate_id uuid,
+  candidate_name text,
+  photo_url text,
+  vote_count bigint
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Verify caller is admin
+  if not public.is_admin() then
+    raise exception 'Access denied: Admin privileges required';
+  end if;
+
+  return query
+  select
+    c.id as candidate_id,
+    c.name as candidate_name,
+    c.photo_url,
+    coalesce(count(v.id), 0)::bigint as vote_count
+  from election_candidates ec
+  join candidates c on c.id = ec.candidate_id
+  left join votes v on v.candidate_id = c.id and v.election_id = p_election_id
+  where ec.election_id = p_election_id
+  group by c.id, c.name, c.photo_url
+  order by vote_count desc, c.name;
+end;
+$$;
+
+-- Function to get total vote count for an election (admin only)
+create or replace function public.get_election_vote_count(p_election_id uuid)
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count bigint;
+begin
+  -- Verify caller is admin
+  if not public.is_admin() then
+    raise exception 'Access denied: Admin privileges required';
+  end if;
+
+  select count(*) into v_count
+  from votes
+  where election_id = p_election_id;
+
+  return coalesce(v_count, 0);
+end;
+$$;
+
 -- Enable Row Level Security
 alter table public.users enable row level security;
 alter table public.candidates enable row level security;
@@ -250,10 +306,19 @@ on public.votes
 for select
 using (user_id = auth.uid());
 
-create policy "Admins can read all votes"
+-- Enhanced admin policy for vote results
+create policy "Admins can read all votes for results"
 on public.votes
 for select
-using (public.is_admin());
+using (
+  exists (
+    select 1
+    from public.users
+    where users.id = auth.uid()
+      and users.role = 'admin'
+      and users.is_active = true
+  )
+);
 
 -- RLS Policies for audit logs
 create policy "Admins can read audit logs"
@@ -269,6 +334,8 @@ with check (performed_by = auth.uid());
 -- Grant necessary permissions
 grant execute on function public.cast_vote(uuid, uuid, uuid) to authenticated;
 grant execute on function public.is_admin(uuid) to authenticated;
+grant execute on function public.get_election_results(uuid) to authenticated;
+grant execute on function public.get_election_vote_count(uuid) to authenticated;
 
 -- Create indexes for performance
 create index idx_users_enrollment on public.users (enrollment_number);
