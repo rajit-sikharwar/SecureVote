@@ -103,7 +103,7 @@ export async function hasVoted(userId: string, electionId: string): Promise<bool
  */
 export async function getElectionResults(electionId: string) {
   // Use the secure database function that bypasses RLS
-  const { data, error } = await supabase.rpc('get_election_results', {
+  const { data, error } = await supabase.rpc('get_election_results' as any, {
     p_election_id: electionId,
   });
 
@@ -174,7 +174,7 @@ async function getElectionResultsFallback(electionId: string) {
  */
 export async function getTotalVotesForElection(electionId: string): Promise<number> {
   // Use the secure database function that bypasses RLS
-  const { data, error } = await supabase.rpc('get_election_vote_count', {
+  const { data, error } = await supabase.rpc('get_election_vote_count' as any, {
     p_election_id: electionId,
   });
 
@@ -196,5 +196,32 @@ async function getTotalVotesForElectionFallback(electionId: string): Promise<num
     .eq('election_id', electionId);
 
   assertNoError(error, 'Failed to count votes.');
+  return count ?? 0;
+}
+
+/**
+ * Get total vote count across all elections (for admin dashboard)
+ */
+export async function getTotalVoteCount(): Promise<number> {
+  // Use the secure RPC function to get count from all elections
+  const { data, error } = await supabase.rpc('get_total_vote_count' as any);
+
+  if (error) {
+    // Fallback to direct query
+    return getTotalVoteCountFallback();
+  }
+
+  return data ?? 0;
+}
+
+/**
+ * Fallback using direct query (may be affected by RLS)
+ */
+async function getTotalVoteCountFallback(): Promise<number> {
+  const { count, error } = await supabase
+    .from('votes')
+    .select('id', { count: 'exact', head: true });
+
+  assertNoError(error, 'Failed to count total votes.');
   return count ?? 0;
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { listAuditLogs, listUsers } from '@/services/user.service';
 import { getCandidatesForElection } from '@/services/candidate.service';
 import { listElections } from '@/services/election.service';
+import { getTotalVoteCount } from '@/services/vote.service';
 import type { AuditLog, Candidate, Election } from '@/types';
 
 interface AdminStats {
@@ -27,10 +28,11 @@ export function useAdminData() {
     setLoading(true);
 
     try {
-      const [elections, users, logs] = await Promise.all([
+      const [elections, users, logs, totalVotes] = await Promise.all([
         listElections(),
         listUsers(250),
         listAuditLogs(10),
+        getTotalVoteCount(),
       ]);
 
       const candidateGroups = await Promise.all(
@@ -43,7 +45,7 @@ export function useAdminData() {
         totalElections: elections.length,
         totalCandidates: allCandidates.length,
         totalVoters: users.filter((user) => user.role === 'student').length,
-        totalVotesCast: 0, // TODO: Calculate from vote service if needed
+        totalVotesCast: totalVotes,
       });
       setRecentLogs(logs);
     } catch (error) {
