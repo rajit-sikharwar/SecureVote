@@ -5,6 +5,7 @@
 -- Drop existing functions if they exist (for idempotency)
 DROP FUNCTION IF EXISTS public.get_election_results(uuid);
 DROP FUNCTION IF EXISTS public.get_election_vote_count(uuid);
+DROP FUNCTION IF EXISTS public.get_total_vote_count();
 
 -- Function to get election results (admin only, bypasses RLS)
 CREATE OR REPLACE FUNCTION public.get_election_results(p_election_id uuid)
@@ -66,6 +67,30 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_election_results(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_election_vote_count(uuid) TO authenticated;
 
+-- Function to get total vote count across all elections (admin only)
+CREATE OR REPLACE FUNCTION public.get_total_vote_count()
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_count bigint;
+BEGIN
+  -- Verify caller is admin
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Access denied: Admin privileges required';
+  END IF;
+
+  SELECT COUNT(*) INTO v_count
+  FROM votes;
+
+  RETURN COALESCE(v_count, 0);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_total_vote_count() TO authenticated;
+
 -- Also ensure the is_admin function exists and is correct
 CREATE OR REPLACE FUNCTION public.is_admin(p_user_id uuid DEFAULT auth.uid())
 RETURNS boolean
@@ -105,5 +130,5 @@ END $$;
 DO $$
 BEGIN
   RAISE NOTICE 'Election results functions created successfully!';
-  RAISE NOTICE 'Functions: get_election_results(uuid), get_election_vote_count(uuid)';
+  RAISE NOTICE 'Functions: get_election_results(uuid), get_election_vote_count(uuid), get_total_vote_count()';
 END $$;
