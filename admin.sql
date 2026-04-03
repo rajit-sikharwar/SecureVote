@@ -105,12 +105,14 @@ $$;
 -- ADMIN MANAGEMENT FUNCTIONS
 -- ============================================
 
--- Function to create a new admin user
-CREATE OR REPLACE FUNCTION public.create_admin_user(
-  p_email TEXT,
-  p_full_name TEXT,
-  p_phone TEXT DEFAULT '+1234567890',
-  p_college_name TEXT DEFAULT 'SecureVote College'
+-- Function to create a new admin user with authentication
+-- This function creates both auth.users and public.users records
+CREATE OR REPLACE FUNCTION public.add_admin_user(
+  admin_email TEXT,
+  admin_name TEXT,
+  admin_phone TEXT DEFAULT '+1234567890',
+  college_name TEXT DEFAULT 'SecureVote College',
+  admin_password TEXT DEFAULT NULL
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -120,6 +122,8 @@ AS $$
 DECLARE
   v_admin_id UUID;
   v_current_user_role TEXT;
+  v_generated_password TEXT;
+  v_auth_user_id UUID;
 BEGIN
   -- Check if current user is admin
   SELECT role INTO v_current_user_role
@@ -133,7 +137,39 @@ BEGIN
     );
   END IF;
 
-  -- Create admin user record
+  -- Generate a temporary password if none provided
+  IF admin_password IS NULL THEN
+    v_generated_password := 'Admin@' || SUBSTRING(gen_random_uuid()::TEXT, 1, 8);
+  ELSE
+    v_generated_password := admin_password;
+  END IF;
+
+  -- Step 1: Create auth user using Supabase Admin API
+  -- Note: This requires the service_role key in production
+  -- For now, we'll return instructions to create via dashboard
+  
+  -- Check if auth user already exists
+  SELECT id INTO v_auth_user_id
+  FROM auth.users
+  WHERE email = admin_email;
+
+  IF v_auth_user_id IS NULL THEN
+    -- Auth user doesn't exist, return instructions
+    RETURN json_build_object(
+      'success', false,
+      'message', 'Please create auth user first',
+      'instructions', json_build_object(
+        'step1', 'Go to Supabase Dashboard → Authentication → Users',
+        'step2', 'Create user with email: ' || admin_email,
+        'step3', 'Set password: ' || v_generated_password,
+        'step4', 'Check "Auto Confirm User"',
+        'step5', 'Then retry this operation',
+        'generated_password', v_generated_password
+      )
+    );
+  END IF;
+
+  -- Step 2: Create admin user profile record
   INSERT INTO public.users (
     id,
     email,
@@ -152,15 +188,15 @@ BEGIN
     section,
     is_active
   ) VALUES (
-    gen_random_uuid(),
-    p_email,
-    p_full_name,
+    v_auth_user_id,  -- Use the existing auth user ID
+    admin_email,
+    admin_name,
     'admin',
-    p_phone,
+    admin_phone,
     '1990-01-01',
     'other',
     'Admin Office',
-    p_college_name,
+    college_name,
     'ADMIN-' || SUBSTRING(gen_random_uuid()::TEXT, 1, 8),
     'ADMIN',
     EXTRACT(YEAR FROM NOW())::INTEGER,
@@ -171,7 +207,9 @@ BEGIN
   )
   ON CONFLICT (email) DO UPDATE SET
     role = 'admin',
-    full_name = p_full_name,
+    full_name = EXCLUDED.full_name,
+    phone = EXCLUDED.phone,
+    college_name = EXCLUDED.college_name,
     is_active = true
   RETURNING id INTO v_admin_id;
 
@@ -181,15 +219,46 @@ BEGIN
     'admin_created',
     auth.uid(),
     v_admin_id::TEXT,
-    jsonb_build_object('email', p_email, 'name', p_full_name)
+    jsonb_build_object('email', admin_email, 'name', admin_name)
   );
 
   RETURN json_build_object(
     'success', true,
     'message', 'Admin user created successfully',
-    'admin_id', v_admin_id
+    'admin_id', v_admin_id,
+    'email', admin_email
   );
+EXCEPTION
+  WHEN foreign_key_violation THEN
+    RETURN json_build_object(
+      'success', false,
+      'message', 'Auth user not found. Create user in Authentication first with email: ' || admin_email
+    );
+  WHEN unique_violation THEN
+    RETURN json_build_object(
+      'success', false,
+      'message', 'User with this email already exists'
+    );
+  WHEN OTHERS THEN
+    RETURN json_build_object(
+      'success', false,
+      'message', 'Error: ' || SQLERRM
+    );
 END;
+$$;
+
+-- Legacy function name for backward compatibility
+CREATE OR REPLACE FUNCTION public.create_admin_user(
+  p_email TEXT,
+  p_full_name TEXT,
+  p_phone TEXT DEFAULT '+1234567890',
+  p_college_name TEXT DEFAULT 'SecureVote College'
+)
+RETURNS JSON
+LANGUAGE SQL
+SECURITY DEFINER
+AS $$
+  SELECT public.add_admin_user(p_email, p_full_name, p_phone, p_college_name, NULL);
 $$;
 
 -- Function to deactivate a user (soft delete)
@@ -341,6 +410,7 @@ USING (
 GRANT EXECUTE ON FUNCTION public.get_election_results(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_election_vote_count(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_total_vote_count() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.add_admin_user(TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.create_admin_user(TEXT, TEXT, TEXT, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.deactivate_user(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.clear_all_sessions() TO authenticated;

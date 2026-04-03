@@ -26,9 +26,22 @@ export default function ManageAdmins() {
     email: '',
     fullName: '',
     phone: '',
-    collegeName: 'SecureVote College'
+    collegeName: 'SecureVote College',
+    password: '' // Add password field
   });
   const [submitting, setSubmitting] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
+
+  // Generate a secure random password
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
+    let password = 'Admin@';
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData({ ...formData, password });
+    setGeneratedPassword(password);
+  };
 
   const loadAdmins = async () => {
     setLoading(true);
@@ -51,37 +64,108 @@ export default function ManageAdmins() {
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.fullName) {
-      toast.error('Email and name are required');
+    if (!formData.email || !formData.fullName || !formData.password) {
+      toast.error('Email, name, and password are required');
       return;
     }
 
     setSubmitting(true);
     try {
-      // Call the PostgreSQL function to add admin
+      // Step 1: Use standard signup to create auth user
+      // This works with anon key and auto-creates the auth user
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            role: 'admin'
+          },
+          emailRedirectTo: undefined // Disable email confirmation for now
+        }
+      });
+
+      if (signUpError) {
+        console.error('Auth user creation error:', signUpError);
+        throw new Error(signUpError.message);
+      }
+
+      if (!signUpData.user) {
+        throw new Error('Failed to create authentication user');
+      }
+
+      // Wait a moment for auth user to be fully created
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Step 2: Call the PostgreSQL function to create admin profile
       const { data, error } = await supabase
         .rpc('add_admin_user' as any, {
           admin_email: formData.email,
           admin_name: formData.fullName,
           admin_phone: formData.phone,
-          college_name: formData.collegeName
+          college_name: formData.collegeName,
+          admin_password: formData.password
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile creation error:', error);
+        throw error;
+      }
 
       const result = data as any;
 
       if (result?.success) {
-        toast.success('Admin user created successfully!');
+        toast.success(`Admin created successfully!\n\nEmail: ${formData.email}\nPassword: ${formData.password}\n\nIMPORTANT: Save these credentials!`, {
+          duration: 10000
+        });
         await loadAdmins();
         setShowAddForm(false);
-        setFormData({ email: '', fullName: '', phone: '', collegeName: 'SecureVote College' });
+        setFormData({ email: '', fullName: '', phone: '', collegeName: 'SecureVote College', password: '' });
+        setGeneratedPassword('');
       } else {
-        toast.error(result?.message || 'Failed to create admin user');
+        // If profile creation failed but auth user was created, show special message
+        toast.error(`⚠️ Auth user created but profile failed: ${result?.message}\n\nGo to Supabase Dashboard → Authentication → Users to manage.`, {
+          duration: 8000
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding admin:', error);
-      toast.error('Failed to create admin user');
+      const errorMsg = error?.message || 'Failed to create admin user';
+      
+      // Show specific error messages
+      if (errorMsg.includes('rate limit')) {
+        toast.error('Email rate limit exceeded. Please wait a few minutes and try again.');
+      } else if (errorMsg.includes('already registered') || errorMsg.includes('already been registered')) {
+        toast.error('A user with this email already exists');
+      } else if (errorMsg.includes('User not allowed')) {
+        toast.error('Permission denied. This requires admin privileges via Supabase Dashboard.\n\nSee console for instructions.', {
+          duration: 8000
+        });
+        console.log(`
+===========================================
+ADMIN CREATION INSTRUCTIONS
+===========================================
+
+To create an admin user manually:
+
+1. Go to Supabase Dashboard
+2. Navigate to: Authentication → Users
+3. Click "Add User"
+4. Enter:
+   - Email: ${formData.email}
+   - Password: ${formData.password}
+   - Check "Auto Confirm User"
+5. Click "Create User"
+6. Come back here and retry "Create Admin"
+
+Credentials to use:
+Email: ${formData.email}
+Password: ${formData.password}
+===========================================
+        `);
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -171,6 +255,35 @@ export default function ManageAdmins() {
                   className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="John Doe"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password *
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="flex-1 h-11 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter password or generate"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generatePassword}
+                    className="whitespace-nowrap"
+                  >
+                    Generate
+                  </Button>
+                </div>
+                {generatedPassword && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Password generated! Make sure to save it before creating the admin.
+                  </p>
+                )}
               </div>
 
               <div>
