@@ -42,29 +42,30 @@ export function Modal({ isOpen, onClose, title, children, footer, maxWidth = 'md
   return createPortal(
     <div 
       ref={overlayRef}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
       onClick={handleBackdropClick}
     >
       <div className={cn(
-        "bg-white rounded-2xl shadow-xl w-full flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200",
+        "bg-white rounded-2xl sm:rounded-3xl shadow-xl w-full flex flex-col max-h-[85vh] sm:max-h-[90vh] animate-in zoom-in-95 duration-200",
         maxWidthClasses[maxWidth]
       )}>
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 pr-2">{title}</h2>
             <button 
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-2 sm:p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+              aria-label="Close modal"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         )}
-        <div className="p-6 overflow-y-auto">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
           {children}
         </div>
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl sm:rounded-b-3xl flex justify-end gap-2 sm:gap-3 flex-wrap">
             {footer}
           </div>
         )}
