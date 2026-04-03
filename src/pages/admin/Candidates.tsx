@@ -170,76 +170,79 @@ export default function AdminCandidates() {
         />
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 font-medium">
-                <tr>
-                  <th className="px-6 py-4">Candidate</th>
-                  <th className="px-6 py-4">Academic Info</th>
-                  <th className="px-6 py-4">Description</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="inline-block min-w-full align-middle">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 font-medium">
+                  <tr>
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Candidate</th>
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Academic Info</th>
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Description</th>
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-right whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
 
-              <tbody className="divide-y divide-gray-100">
-                {filteredCandidates.map((candidate) => {
-                  const courseInfo = getCourseInfo(candidate.course);
+                <tbody className="divide-y divide-gray-100">
+                  {filteredCandidates.map((candidate) => {
+                    const courseInfo = getCourseInfo(candidate.course);
 
-                  return (
-                    <tr
-                      key={candidate.id}
-                      className="hover:bg-gray-50/50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar
-                            src={candidate.photoURL}
-                            fallback={candidate.name}
-                            size="sm"
-                          />
+                    return (
+                      <tr
+                        key={candidate.id}
+                        className="hover:bg-gray-50/50 transition-colors"
+                      >
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Avatar
+                              src={candidate.photoURL}
+                              fallback={candidate.name}
+                              size="sm"
+                            />
 
-                          <span className="font-semibold text-gray-900">
-                            {candidate.name}
-                          </span>
-                        </div>
-                      </td>
+                            <span className="font-semibold text-gray-900 truncate">
+                              {candidate.name}
+                            </span>
+                          </div>
+                        </td>
 
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                            {courseInfo?.label || candidate.course}
-                          </span>
-                          <span className="text-gray-400">•</span>
-                          <span className="text-xs text-gray-600">
-                            Year {candidate.year}
-                          </span>
-                          <span className="text-gray-400">•</span>
-                          <span className="text-xs text-gray-600">
-                            Sec {candidate.section}
-                          </span>
-                        </div>
-                      </td>
+                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 whitespace-nowrap">
+                              {courseInfo?.label || candidate.course}
+                            </span>
+                            <span className="text-gray-400 hidden sm:inline">•</span>
+                            <span className="text-xs text-gray-600 whitespace-nowrap">
+                              Year {candidate.year}
+                            </span>
+                            <span className="text-gray-400 hidden sm:inline">•</span>
+                            <span className="text-xs text-gray-600 whitespace-nowrap">
+                              Sec {candidate.section}
+                            </span>
+                          </div>
+                        </td>
 
-                      <td className="px-6 py-4">
-                        <p className="text-gray-600 line-clamp-2 max-w-md">
-                          {candidate.description}
-                        </p>
-                      </td>
+                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                          <p className="text-gray-600 text-xs sm:text-sm line-clamp-2 max-w-xs sm:max-w-md">
+                            {candidate.description}
+                          </p>
+                        </td>
 
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => setDeleting(candidate)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete Candidate"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 text-right">
+                          <button
+                            onClick={() => setDeleting(candidate)}
+                            className="p-2.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Candidate"
+                            aria-label="Delete candidate"
+                          >
+                            <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
