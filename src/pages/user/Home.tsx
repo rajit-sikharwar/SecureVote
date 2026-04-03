@@ -112,28 +112,28 @@ export default function StudentHome() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-4 lg:gap-6">
-            <div className="flex items-center gap-3 bg-white/10 px-4 py-3 rounded-xl backdrop-blur-sm">
-              <Vote className="h-5 w-5" />
-              <div className="text-center">
-                <div className="text-xl font-bold">{votedCount}</div>
-                <div className="text-indigo-200 text-xs">Votes Cast</div>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 bg-white/10 px-3 sm:px-4 py-3 rounded-xl backdrop-blur-sm">
+              <Vote className="h-4 w-4 sm:h-5 sm:w-5" />
+              <div className="text-center sm:text-left">
+                <div className="text-lg sm:text-xl font-bold">{votedCount}</div>
+                <div className="text-indigo-200 text-[10px] sm:text-xs whitespace-nowrap">Votes Cast</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 bg-white/10 px-4 py-3 rounded-xl backdrop-blur-sm">
-              <Calendar className="h-5 w-5" />
-              <div className="text-center">
-                <div className="text-xl font-bold">{activeElections.length}</div>
-                <div className="text-indigo-200 text-xs">Active Now</div>
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 bg-white/10 px-3 sm:px-4 py-3 rounded-xl backdrop-blur-sm">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+              <div className="text-center sm:text-left">
+                <div className="text-lg sm:text-xl font-bold">{activeElections.length}</div>
+                <div className="text-indigo-200 text-[10px] sm:text-xs whitespace-nowrap">Active Now</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 bg-white/10 px-4 py-3 rounded-xl backdrop-blur-sm">
-              <TrendingUp className="h-5 w-5" />
-              <div className="text-center">
-                <div className="text-xl font-bold">{totalParticipationRate}%</div>
-                <div className="text-indigo-200 text-xs">Participation</div>
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 bg-white/10 px-3 sm:px-4 py-3 rounded-xl backdrop-blur-sm">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+              <div className="text-center sm:text-left">
+                <div className="text-lg sm:text-xl font-bold">{totalParticipationRate}%</div>
+                <div className="text-indigo-200 text-[10px] sm:text-xs whitespace-nowrap">Participation</div>
               </div>
             </div>
           </div>
@@ -143,24 +143,24 @@ export default function StudentHome() {
       {/* Active Elections */}
       {activeElections.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <Vote className="h-6 w-6 text-green-600" />
+              <div className="p-2.5 sm:p-3 bg-green-100 rounded-xl">
+                <Vote className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Active Elections</h2>
-                <p className="text-gray-500">Vote now in these ongoing elections</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Active Elections</h2>
+                <p className="text-gray-500 text-sm sm:text-base">Vote now in these ongoing elections</p>
               </div>
             </div>
             {activeElections.length > 4 && (
-              <button className="text-indigo-600 hover:text-indigo-700 font-medium text-sm">
+              <button className="text-indigo-600 hover:text-indigo-700 font-medium text-sm self-start sm:self-auto">
                 View All ({activeElections.length})
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {activeElections.slice(0, 6).map((election) => (
               <ElectionCard
                 key={election.id}

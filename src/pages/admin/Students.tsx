@@ -88,97 +88,101 @@ export default function AdminStudents() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 font-medium tracking-wide">
-              <tr>
-                <th className="px-6 py-4">Student Profile</th>
-                <th className="px-6 py-4">Enrollment No.</th>
-                <th className="px-6 py-4">Course Details</th>
-                <th className="px-6 py-4">Registered</th>
-                <th className="px-6 py-4">Status</th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-gray-100">
-              {filteredStudents.length === 0 ? (
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <div className="inline-block min-w-full align-middle">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 font-medium tracking-wide">
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                    No students found matching your search.
-                  </td>
+                  <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Student Profile</th>
+                  <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Enrollment No.</th>
+                  <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Course Details</th>
+                  <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Registered</th>
+                  <th className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">Status</th>
                 </tr>
-              ) : (
-                filteredStudents.map((student) => {
-                  const courseInfo = getCourseInfo(student.course);
+              </thead>
 
-                  return (
-                    <tr key={student.uid} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar
-                            src={student.photoURL}
-                            fallback={student.fullName || 'S'}
-                            size="sm"
-                          />
+              <tbody className="divide-y divide-gray-100">
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 sm:px-6 py-6 sm:py-8 text-center text-gray-500">
+                      No students found matching your search.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map((student) => {
+                    const courseInfo = getCourseInfo(student.course);
 
-                          <div>
-                            <div className="font-semibold text-gray-900">
-                              {student.fullName || 'Anonymous'}
+                    return (
+                      <tr key={student.uid} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Avatar
+                              src={student.photoURL}
+                              fallback={student.fullName || 'S'}
+                              size="sm"
+                            />
+
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-gray-900 truncate">
+                                {student.fullName || 'Anonymous'}
+                              </div>
+                              <div className="text-gray-500 text-xs truncate">
+                                {student.email}
+                              </div>
                             </div>
-                            <div className="text-gray-500 text-xs">
-                              {student.email}
+                          </div>
+                        </td>
+
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <div className="font-mono text-xs sm:text-sm text-gray-900 font-medium">
+                            {student.enrollmentNumber}
+                          </div>
+                        </td>
+
+                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 whitespace-nowrap">
+                                {courseInfo?.label || student.course}
+                              </span>
+                              <span className="text-gray-400 hidden sm:inline">•</span>
+                              <span className="text-xs text-gray-600 whitespace-nowrap">
+                                Year {student.year}
+                              </span>
+                              <span className="text-gray-400 hidden sm:inline">•</span>
+                              <span className="text-xs text-gray-600 whitespace-nowrap">
+                                Section {student.section}
+                              </span>
                             </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="px-6 py-4">
-                        <div className="font-mono text-sm text-gray-900 font-medium">
-                          {student.enrollmentNumber}
-                        </div>
-                      </td>
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                          {formatRegisteredAt(student.createdAt)}
+                        </td>
 
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                              {courseInfo?.label || student.course}
-                            </span>
-                            <span className="text-gray-400">•</span>
-                            <span className="text-xs text-gray-600">
-                              Year {student.year}
-                            </span>
-                            <span className="text-gray-400">•</span>
-                            <span className="text-xs text-gray-600">
-                              Section {student.section}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 text-gray-600">
-                        {formatRegisteredAt(student.createdAt)}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {student.isActive ? (
-                          <div className="flex items-center gap-1.5 text-emerald-600 font-medium">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                            Active
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-gray-400 font-medium">
-                            <span className="h-2 w-2 rounded-full bg-gray-300" />
-                            Inactive
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          {student.isActive ? (
+                            <div className="flex items-center gap-1.5 text-emerald-600 font-medium text-xs sm:text-sm">
+                              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                              <span className="hidden sm:inline">Active</span>
+                              <span className="sm:hidden">✓</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-gray-400 font-medium text-xs sm:text-sm">
+                              <span className="h-2 w-2 rounded-full bg-gray-300" />
+                              <span className="hidden sm:inline">Inactive</span>
+                              <span className="sm:hidden">−</span>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
