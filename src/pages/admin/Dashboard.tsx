@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Vote, Users, Calendar, GraduationCap, TrendingUp } from 'lucide-react';
+import { Vote, Users, Calendar, GraduationCap, TrendingUp, BarChart3, PieChart } from 'lucide-react';
 import { useElections } from '@/hooks/useElections';
 import { listAllCandidates } from '@/services/candidate.service';
 import { listUsers } from '@/services/user.service';
-import { CardScene } from '@/components/three/CardScene';
+import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
@@ -135,15 +135,91 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* 3D Visualization */}
-      <Card className="p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
-          System Visualization
-        </h2>
-        <div className="h-96 rounded-xl overflow-hidden bg-gradient-to-br from-indigo-50 to-purple-50">
-          <CardScene cardCount={4} />
-        </div>
-      </Card>
+      {/* Interactive Election Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Election Status Distribution - Bar Chart */}
+        <Card className="p-6 hover:shadow-xl transition-shadow">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <BarChart3 className="h-5 w-5 text-indigo-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">
+              Election Status Overview
+            </h2>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={[
+                { name: 'Active', count: activeElections.length, fill: '#10b981' },
+                { name: 'Upcoming', count: upcomingElections.length, fill: '#3b82f6' },
+                { name: 'Completed', count: elections.length - activeElections.length - upcomingElections.length, fill: '#6366f1' },
+              ]}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: '14px', fontWeight: 500 }} />
+              <YAxis stroke="#6b7280" style={{ fontSize: '14px' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                }}
+                cursor={{ fill: 'rgba(99, 102, 241, 0.1)' }}
+              />
+              <Legend wrapperStyle={{ fontSize: '14px', fontWeight: 500 }} />
+              <Bar dataKey="count" fill="#6366f1" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Election Distribution - Pie Chart */}
+        <Card className="p-6 hover:shadow-xl transition-shadow">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <PieChart className="h-5 w-5 text-purple-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">
+              Election Distribution
+            </h2>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <RechartsPieChart>
+              <Pie
+                data={[
+                  { name: 'Active', value: activeElections.length, fill: '#10b981' },
+                  { name: 'Upcoming', value: upcomingElections.length, fill: '#3b82f6' },
+                  { name: 'Completed', value: Math.max(0, elections.length - activeElections.length - upcomingElections.length), fill: '#6366f1' },
+                ].filter(item => item.value > 0)}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                outerRadius={100}
+                dataKey="value"
+              >
+                {[
+                  { name: 'Active', value: activeElections.length, fill: '#10b981' },
+                  { name: 'Upcoming', value: upcomingElections.length, fill: '#3b82f6' },
+                  { name: 'Completed', value: Math.max(0, elections.length - activeElections.length - upcomingElections.length), fill: '#6366f1' },
+                ].filter(item => item.value > 0).map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: '14px', fontWeight: 500 }} />
+            </RechartsPieChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
 
       {/* Quick Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
