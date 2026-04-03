@@ -1,5 +1,6 @@
 export const ROUTES = {
   LANDING:               '/',
+  STUDENT_LOGIN:         '/login',
   STUDENT_REGISTER:      '/register',
   ADMIN_LOGIN:           '/admin/login',
   STUDENT_HOME:          '/home',

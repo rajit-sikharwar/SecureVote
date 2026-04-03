@@ -14,6 +14,7 @@ import AdminRoute from '@/components/layout/AdminRoute';
 import LoadingPage from '@/components/shared/LoadingPage';
 
 const Landing = lazy(() => import('@/pages/Landing'));
+const StudentLogin = lazy(() => import('@/pages/StudentLogin'));
 const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
 const StudentRegistration = lazy(() => import('@/pages/StudentRegistration'));
 const StudentHome = lazy(() => import('@/pages/user/Home'));
@@ -87,6 +88,7 @@ export default function App() {
       <Suspense fallback={<LoadingPage />}>
         <Routes>
           <Route path={ROUTES.LANDING} element={<Landing />} />
+          <Route path={ROUTES.STUDENT_LOGIN} element={<StudentLogin />} />
           <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLogin />} />
           <Route path={ROUTES.STUDENT_REGISTER} element={<StudentRegistration />} />
 
