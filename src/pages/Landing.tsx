@@ -24,10 +24,10 @@ export default function Landing() {
           className="text-center"
         >
           {/* Logo/Brand */}
-          <div className="mb-8 flex justify-center">
-            <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20">
-              <Vote className="h-8 w-8 text-cyan-300" />
-              <h1 className="text-3xl font-bold text-white">SecureVote</h1>
+          <div className="mb-6 sm:mb-8 flex justify-center">
+            <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20">
+              <Vote className="h-6 w-6 sm:h-8 sm:w-8 text-cyan-300" />
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">SecureVote</h1>
             </div>
           </div>
 
@@ -36,7 +36,7 @@ export default function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-xl text-slate-300 mb-12 max-w-2xl mx-auto"
+            className="text-base sm:text-lg lg:text-xl text-slate-300 mb-8 sm:mb-12 max-w-2xl mx-auto px-4"
           >
             Modern Student Election Platform for College Voting
           </motion.p>
@@ -46,31 +46,31 @@ export default function Landing() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-8"
+            className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto mb-6 sm:mb-8"
           >
             {/* Student Login Card */}
             <button
               onClick={() => navigate(ROUTES.STUDENT_LOGIN)}
-              className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-indigo-700 p-8 text-left transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_rgba(99,102,241,0.4)] border border-indigo-400/20"
+              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 sm:p-8 text-left transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_rgba(99,102,241,0.4)] border border-indigo-400/20"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="relative">
-                <div className="mb-4 inline-flex p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
-                  <GraduationCap className="h-8 w-8 text-white" />
+                <div className="mb-3 sm:mb-4 inline-flex p-2.5 sm:p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
+                  <GraduationCap className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
                 
-                <h2 className="text-2xl font-bold text-white mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
                   Login as Student
                 </h2>
                 
-                <p className="text-indigo-100 text-sm leading-relaxed">
+                <p className="text-indigo-100 text-xs sm:text-sm leading-relaxed">
                   Access your student portal to participate in elections, view results, and manage your voting history.
                 </p>
 
-                <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-cyan-300">
+                <div className="mt-4 sm:mt-6 flex items-center gap-2 text-xs sm:text-sm font-semibold text-cyan-300">
                   <span>Continue to Student Portal</span>
-                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -80,26 +80,26 @@ export default function Landing() {
             {/* Admin Login Card */}
             <button
               onClick={() => navigate(ROUTES.ADMIN_LOGIN)}
-              className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 p-8 text-left transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_rgba(100,116,139,0.4)] border border-slate-500/30"
+              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 p-6 sm:p-8 text-left transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_rgba(100,116,139,0.4)] border border-slate-500/30"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="relative">
-                <div className="mb-4 inline-flex p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
-                  <Shield className="h-8 w-8 text-white" />
+                <div className="mb-3 sm:mb-4 inline-flex p-2.5 sm:p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
+                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
                 
-                <h2 className="text-2xl font-bold text-white mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
                   Login as Admin
                 </h2>
                 
-                <p className="text-slate-200 text-sm leading-relaxed">
+                <p className="text-slate-200 text-xs sm:text-sm leading-relaxed">
                   Access the admin dashboard to create elections, manage candidates, view analytics, and oversee the voting process.
                 </p>
 
-                <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-cyan-300">
+                <div className="mt-4 sm:mt-6 flex items-center gap-2 text-xs sm:text-sm font-semibold text-cyan-300">
                   <span>Continue to Admin Portal</span>
-                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -112,22 +112,22 @@ export default function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="max-w-md mx-auto"
+            className="max-w-md mx-auto px-4"
           >
-            <div className="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-6">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-cyan-500/20">
-                    <UserPlus className="h-5 w-5 text-cyan-300" />
+            <div className="rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-3 sm:gap-4 flex-col sm:flex-row">
+                <div className="flex items-center gap-2 sm:gap-3 text-center sm:text-left">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/20">
+                    <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-300" />
                   </div>
                   <div className="text-left">
-                    <p className="text-white font-semibold">New Student?</p>
-                    <p className="text-slate-400 text-sm">Create your account to get started</p>
+                    <p className="text-sm sm:text-base text-white font-semibold">New Student?</p>
+                    <p className="text-slate-400 text-xs sm:text-sm">Create your account to get started</p>
                   </div>
                 </div>
                 <button
                   onClick={() => navigate(ROUTES.STUDENT_REGISTER)}
-                  className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold transition-all hover:scale-105 whitespace-nowrap"
+                  className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-sm sm:text-base transition-all hover:scale-105 whitespace-nowrap w-full sm:w-auto"
                 >
                   Sign Up
                 </button>
@@ -140,7 +140,7 @@ export default function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7, duration: 0.6 }}
-            className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-slate-400"
+            className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-slate-400 px-4"
           >
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-400" />
