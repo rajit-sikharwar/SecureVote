@@ -3,15 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { ShieldCheck, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, ArrowLeft, CheckCircle2, Eye, EyeOff, User, Mail, Phone, Calendar, MapPin, Building, Hash, BookOpen } from 'lucide-react';
 import { registerStudent } from '@/services/auth.service';
 import { COURSES, ACADEMIC_YEARS, SECTIONS, GENDERS, getAllowedYears, getAdmissionYears } from '@/constants/academic';
 import { ROUTES } from '@/constants/routes';
 import { getAppError } from '@/lib/errors';
 import type { Course, RegistrationData } from '@/types';
 
-// Validation schema with all student fields
+// Validation schema
 const schema = z.object({
   // Personal Information
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -43,6 +44,8 @@ type Form = z.infer<typeof schema>;
 export default function StudentRegistration() {
   const navigate = useNavigate();
   const [done, setDone] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -59,8 +62,6 @@ export default function StudentRegistration() {
   });
 
   const watchedCourse = watch('course');
-
-  // Update allowed years when course changes
   const allowedYears = watchedCourse ? getAllowedYears(watchedCourse as Course) : [1, 2, 3, 4];
 
   const onSubmit = async (data: Form) => {
@@ -101,188 +102,239 @@ export default function StudentRegistration() {
 
   if (done) {
     return (
-      <div className="min-h-[100dvh] bg-gradient-to-br from-[#0F0C29] via-[#302B63] to-[#24243E] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 text-center">
-          <div className="flex justify-center mb-5">
-            <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
+      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(99,102,241,0.15),_transparent_50%)]" />
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl text-center"
+        >
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-green-500/20 rounded-full">
+              <CheckCircle2 className="h-16 w-16 text-green-400" />
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-3xl font-bold text-white mb-3">
             Registration Successful!
           </h2>
 
-          <p className="text-gray-500 mb-8 text-sm leading-relaxed">
-            Your account has been created successfully. You can now sign in using your email and password.
+          <p className="text-slate-300 mb-8 leading-relaxed">
+            Your student account has been created successfully. You can now sign in and start voting in elections.
           </p>
 
           <button
-            onClick={() => navigate(ROUTES.LANDING)}
-            className="w-full h-13 bg-[#302B63] text-white rounded-2xl font-semibold py-3 hover:bg-[#24243E] transition-colors"
+            onClick={() => navigate(ROUTES.STUDENT_LOGIN)}
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
           >
-            Go to Sign In →
+            <span>Continue to Login</span>
+            <GraduationCap className="h-5 w-5" />
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-br from-[#0F0C29] via-[#302B63] to-[#24243E] py-8 px-4">
-      <div className="w-full max-w-3xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 py-12 px-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(99,102,241,0.15),_transparent_50%),radial-gradient(circle_at_bottom_left,_rgba(59,130,246,0.1),_transparent_50%)]" />
+      
+      {/* Animated background orbs */}
+      <div className="absolute top-20 left-20 w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+
+      <div className="relative z-10 w-full max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
           <Link
             to={ROUTES.LANDING}
-            className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            className="inline-flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm font-medium">Back to Home</span>
           </Link>
-
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-white" />
-            <span className="text-white font-bold text-lg">SecureVote</span>
-          </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Student Registration
-          </h1>
-
-          <p className="text-gray-500 text-sm mb-8">
-            Complete all fields below to register for SecureVote
-          </p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-6 md:p-10 shadow-2xl"
+        >
+          {/* Title */}
+          <div className="text-center mb-8">
+            <div className="inline-flex p-3 rounded-2xl bg-indigo-500/20 mb-4">
+              <GraduationCap className="h-10 w-10 text-indigo-300" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              Student Registration
+            </h1>
+            <p className="text-slate-400">Create your SecureVote account</p>
+          </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
             {/* Personal Information */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">
+              <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <User className="h-5 w-5 text-indigo-400" />
                 Personal Information
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Full Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Full Name <span className="text-red-400">*</span>
                   </label>
                   <input
                     {...register('fullName')}
                     placeholder="John Doe"
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
+                    className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
                   />
                   {errors.fullName && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.fullName.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.fullName.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Email Address <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Email Address <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    {...register('email')}
-                    type="email"
-                    placeholder="you@example.com"
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <input
+                      {...register('email')}
+                      type="email"
+                      placeholder="you@college.edu"
+                      className="w-full h-12 pl-12 pr-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
+                    />
+                  </div>
                   {errors.email && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.email.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.email.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Phone Number <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Phone Number <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    {...register('phone')}
-                    type="tel"
-                    placeholder="9876543210"
-                    maxLength={10}
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
-                  />
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <input
+                      {...register('phone')}
+                      type="tel"
+                      placeholder="9876543210"
+                      maxLength={10}
+                      className="w-full h-12 pl-12 pr-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
+                    />
+                  </div>
                   {errors.phone && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.phone.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.phone.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Date of Birth <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Date of Birth <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    {...register('dateOfBirth')}
-                    type="date"
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
-                  />
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <input
+                      {...register('dateOfBirth')}
+                      type="date"
+                      className="w-full h-12 pl-12 pr-4 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
+                    />
+                  </div>
                   {errors.dateOfBirth && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.dateOfBirth.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.dateOfBirth.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Gender <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Gender <span className="text-red-400">*</span>
                   </label>
                   <select
                     {...register('gender')}
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
+                    className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
                   >
-                    <option value="">Select Gender</option>
+                    <option value="" className="bg-slate-800">Select Gender</option>
                     {GENDERS.map((g) => (
-                      <option key={g.value} value={g.value}>
+                      <option key={g.value} value={g.value} className="bg-slate-800">
                         {g.label}
                       </option>
                     ))}
                   </select>
                   {errors.gender && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.gender.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.gender.message}</p>
                   )}
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Address <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Address <span className="text-red-400">*</span>
                   </label>
-                  <textarea
-                    {...register('address')}
-                    placeholder="Your full address"
-                    rows={2}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
-                  />
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
+                    <textarea
+                      {...register('address')}
+                      placeholder="Your full address"
+                      rows={2}
+                      className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all resize-none"
+                    />
+                  </div>
                   {errors.address && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.address.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.address.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Password <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Password <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    {...register('password')}
-                    type="password"
-                    placeholder="Min. 6 characters"
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
-                  />
+                  <div className="relative">
+                    <input
+                      {...register('password')}
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Min. 6 characters"
+                      className="w-full h-12 px-4 pr-12 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                   {errors.password && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.password.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.password.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Confirm Password <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Confirm Password <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    {...register('confirmPassword')}
-                    type="password"
-                    placeholder="Re-enter password"
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
-                  />
+                  <div className="relative">
+                    <input
+                      {...register('confirmPassword')}
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Re-enter password"
+                      className="w-full h-12 px-4 pr-12 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.confirmPassword.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.confirmPassword.message}</p>
                   )}
                 </div>
               </div>
@@ -290,69 +342,76 @@ export default function StudentRegistration() {
 
             {/* College Information */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">
+              <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <Building className="h-5 w-5 text-indigo-400" />
                 College Information
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    College Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    College Name <span className="text-red-400">*</span>
                   </label>
                   <input
                     {...register('collegeName')}
                     placeholder="Your College Name"
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
+                    className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
                   />
                   {errors.collegeName && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.collegeName.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.collegeName.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Enrollment Number <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Enrollment Number <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    {...register('enrollmentNumber')}
-                    placeholder="EN12345678"
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
-                  />
+                  <div className="relative">
+                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <input
+                      {...register('enrollmentNumber')}
+                      placeholder="EN12345678"
+                      className="w-full h-12 pl-12 pr-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
+                    />
+                  </div>
                   {errors.enrollmentNumber && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.enrollmentNumber.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.enrollmentNumber.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Roll Number <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Roll Number <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    {...register('rollNumber')}
-                    placeholder="ROLL001"
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
-                  />
+                  <div className="relative">
+                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <input
+                      {...register('rollNumber')}
+                      placeholder="ROLL001"
+                      className="w-full h-12 pl-12 pr-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
+                    />
+                  </div>
                   {errors.rollNumber && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.rollNumber.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.rollNumber.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Admission Year <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Admission Year <span className="text-red-400">*</span>
                   </label>
                   <select
                     {...register('admissionYear', { valueAsNumber: true })}
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
+                    className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
                   >
                     {getAdmissionYears().map((year) => (
-                      <option key={year} value={year}>
+                      <option key={year} value={year} className="bg-slate-800">
                         {year}
                       </option>
                     ))}
                   </select>
                   {errors.admissionYear && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.admissionYear.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.admissionYear.message}</p>
                   )}
                 </div>
               </div>
@@ -360,99 +419,113 @@ export default function StudentRegistration() {
 
             {/* Academic Information */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">
+              <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-indigo-400" />
                 Academic Information
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Course <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Course <span className="text-red-400">*</span>
                   </label>
                   <select
                     {...register('course')}
                     onChange={(e) => {
                       register('course').onChange(e);
-                      // Reset year to 1 when course changes
                       setValue('year', 1);
                     }}
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
+                    className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
                   >
-                    <option value="">Select Course</option>
+                    <option value="" className="bg-slate-800">Select Course</option>
                     {COURSES.map((course) => (
-                      <option key={course.id} value={course.id}>
+                      <option key={course.id} value={course.id} className="bg-slate-800">
                         {course.label}
                       </option>
                     ))}
                   </select>
                   {errors.course && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.course.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.course.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Academic Year <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Academic Year <span className="text-red-400">*</span>
                   </label>
                   <select
                     {...register('year', { valueAsNumber: true })}
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
+                    className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
                   >
                     {allowedYears.map((year) => {
                       const yearInfo = ACADEMIC_YEARS.find(y => y.value === year);
                       return (
-                        <option key={year} value={year}>
+                        <option key={year} value={year} className="bg-slate-800">
                           {yearInfo?.label || `Year ${year}`}
                         </option>
                       );
                     })}
                   </select>
                   {errors.year && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.year.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.year.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Section <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Section <span className="text-red-400">*</span>
                   </label>
                   <select
                     {...register('section')}
-                    className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#302B63]/40 focus:border-[#302B63]"
+                    className="w-full h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-xl transition-all"
                   >
-                    <option value="">Select Section</option>
+                    <option value="" className="bg-slate-800">Select Section</option>
                     {SECTIONS.map((section) => (
-                      <option key={section.value} value={section.value}>
+                      <option key={section.value} value={section.value} className="bg-slate-800">
                         {section.label}
                       </option>
                     ))}
                   </select>
                   {errors.section && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.section.message}</p>
+                    <p className="mt-2 text-xs text-red-400">{errors.section.message}</p>
                   )}
                 </div>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-12 bg-[#302B63] text-white rounded-2xl font-semibold hover:bg-[#24243E] transition-colors disabled:opacity-70"
-            >
-              {isSubmitting ? 'Registering…' : 'Register Account'}
-            </button>
+            {/* Submit Button */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-14 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/30 transition-all hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Creating Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <GraduationCap className="h-5 w-5" />
+                    <span>Create Student Account</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
-          <p className="text-center text-xs text-gray-400 mt-5">
-            Already registered?{' '}
+          {/* Login Link */}
+          <p className="text-center text-sm text-slate-400 mt-6">
+            Already have an account?{' '}
             <Link
-              to={ROUTES.LANDING}
-              className="text-[#302B63] font-medium hover:underline"
+              to={ROUTES.STUDENT_LOGIN}
+              className="text-indigo-400 font-medium hover:text-indigo-300 transition-colors"
             >
               Sign in here
             </Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
