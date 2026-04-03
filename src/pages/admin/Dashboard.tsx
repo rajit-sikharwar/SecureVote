@@ -24,16 +24,16 @@ const StatCard = ({
   bgColorClass
 }: StatCardProps) => {
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-medium text-gray-500 text-sm">{title}</h3>
+    <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h3 className="font-medium text-gray-500 text-xs sm:text-sm">{title}</h3>
 
-        <div className={`p-3 rounded-xl ${bgColorClass}`}>
-          <Icon className={`h-6 w-6 ${colorClass}`} />
+        <div className={`p-2 sm:p-3 rounded-xl ${bgColorClass}`}>
+          <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${colorClass}`} />
         </div>
       </div>
 
-      <div className="text-4xl font-bold text-gray-900">{value}</div>
+      <div className="text-3xl sm:text-4xl font-bold text-gray-900">{value}</div>
     </Card>
   );
 };
@@ -92,16 +92,16 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-3">
-        <TrendingUp className="h-8 w-8 text-indigo-600" />
-        <h1 className="text-3xl font-bold text-gray-900">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Dashboard Overview
         </h1>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
           title="Total Elections"
           value={elections.length}
@@ -136,55 +136,56 @@ export default function AdminDashboard() {
       </div>
 
       {/* Interactive Election Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Election Status Distribution - Bar Chart */}
-        <Card className="p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <BarChart3 className="h-5 w-5 text-indigo-600" />
+        <Card className="p-4 sm:p-6 hover:shadow-xl transition-shadow">
+          <div className="flex items-center gap-2 mb-4 sm:mb-6">
+            <div className="p-1.5 sm:p-2 bg-indigo-100 rounded-lg">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">
               Election Status Overview
             </h2>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={250} className="sm:!h-[300px]">
             <BarChart
               data={[
                 { name: 'Active', count: activeElections.length, fill: '#10b981' },
                 { name: 'Upcoming', count: upcomingElections.length, fill: '#3b82f6' },
                 { name: 'Completed', count: elections.length - activeElections.length - upcomingElections.length, fill: '#6366f1' },
               ]}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 20, right: 10, left: -10, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: '14px', fontWeight: 500 }} />
-              <YAxis stroke="#6b7280" style={{ fontSize: '14px' }} />
+              <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: '12px', fontWeight: 500 }} tick={{ fontSize: 12 }} />
+              <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} tick={{ fontSize: 12 }} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#fff',
                   border: '1px solid #e5e7eb',
                   borderRadius: '12px',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  fontSize: '12px',
                 }}
                 cursor={{ fill: 'rgba(99, 102, 241, 0.1)' }}
               />
-              <Legend wrapperStyle={{ fontSize: '14px', fontWeight: 500 }} />
+              <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 500 }} />
               <Bar dataKey="count" fill="#6366f1" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
 
         {/* Election Distribution - Pie Chart */}
-        <Card className="p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <PieChart className="h-5 w-5 text-purple-600" />
+        <Card className="p-4 sm:p-6 hover:shadow-xl transition-shadow">
+          <div className="flex items-center gap-2 mb-4 sm:mb-6">
+            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg">
+              <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">
               Election Distribution
             </h2>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={250} className="sm:!h-[300px]">
             <RechartsPieChart>
               <Pie
                 data={[
@@ -196,7 +197,8 @@ export default function AdminDashboard() {
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                outerRadius={100}
+                outerRadius={80}
+                innerRadius={0}
                 dataKey="value"
               >
                 {[
@@ -213,16 +215,17 @@ export default function AdminDashboard() {
                   border: '1px solid #e5e7eb',
                   borderRadius: '12px',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  fontSize: '12px',
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: '14px', fontWeight: 500 }} />
+              <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 500 }} />
             </RechartsPieChart>
           </ResponsiveContainer>
         </Card>
       </div>
 
       {/* Quick Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <Card className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Vote className="h-6 w-6 text-green-600" />
