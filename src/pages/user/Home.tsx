@@ -203,145 +203,139 @@ export default function StudentHome() {
 
       {/* Recent Activity & Past Elections */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* Past Elections */}
-        <div className="xl:col-span-2">
-          {pastElections.length > 0 ? (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-gray-100 rounded-xl">
-                    <BookOpen className="h-6 w-6 text-gray-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Recent Elections</h2>
-                    <p className="text-gray-500">View results from completed elections</p>
-                  </div>
+        {/* Past Elections - Only show if there are past elections */}
+        {pastElections.length > 0 && (
+          <div className="xl:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gray-100 rounded-xl">
+                  <BookOpen className="h-6 w-6 text-gray-600" />
                 </div>
-                {pastElections.length > 4 && (
-                  <button
-                    onClick={() => navigate(ROUTES.MY_VOTES)}
-                    className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
-                  >
-                    View all past elections →
-                  </button>
-                )}
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Recent Elections</h2>
+                  <p className="text-gray-500">View results from completed elections</p>
+                </div>
               </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {pastElections.slice(0, 4).map((election) => (
-                  <ElectionCard
-                    key={election.id}
-                    election={election}
-                    hasVoted={voteStatuses[election.id]}
-                    onClick={() => navigate(ROUTES.ELECTION_DETAIL.replace(':id', election.id))}
-                  />
-                ))}
-              </div>
+              {pastElections.length > 4 && (
+                <button
+                  onClick={() => navigate(ROUTES.MY_VOTES)}
+                  className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+                >
+                  View all past elections →
+                </button>
+              )}
             </div>
-          ) : (
-            <Card className="p-8 text-center">
-              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Past Elections</h3>
-              <p className="text-gray-500">No completed elections available yet.</p>
-            </Card>
-          )}
-        </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {pastElections.slice(0, 4).map((election) => (
+                <ElectionCard
+                  key={election.id}
+                  election={election}
+                  hasVoted={voteStatuses[election.id]}
+                  onClick={() => navigate(ROUTES.ELECTION_DETAIL.replace(':id', election.id))}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Sidebar - Academic Info & Quick Actions */}
-        <div className="space-y-6">
-          {/* Academic Info Card */}
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <GraduationCap className="h-5 w-5 text-indigo-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Academic Profile</h3>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Course:</span>
-                <span className="font-medium">{courseInfo?.fullName || user.course}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Year:</span>
-                <span className="font-medium">Year {user.year}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Section:</span>
-                <span className="font-medium">Section {user.section}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">College:</span>
-                <span className="font-medium">{user.collegeName}</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* Voting Stats Card */}
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Voting Stats</h3>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-500">Participation Rate</span>
-                  <span className="font-medium">{totalParticipationRate}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${totalParticipationRate}%` }}
-                  ></div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{votedCount}</div>
-                  <div className="text-xs text-gray-500">Votes Cast</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{elections.length - votedCount}</div>
-                  <div className="text-xs text-gray-500">Pending</div>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate(ROUTES.MY_VOTES)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all text-left"
-              >
+        <div className={`space-y-6 ${pastElections.length === 0 ? 'xl:col-span-3' : ''}`}>
+          <div className={`grid ${pastElections.length === 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'} gap-6`}>
+            {/* Academic Info Card */}
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-indigo-100 rounded-lg">
-                  <Vote className="h-4 w-4 text-indigo-600" />
+                  <GraduationCap className="h-5 w-5 text-indigo-600" />
                 </div>
-                <div>
-                  <div className="font-medium text-gray-900">My Voting History</div>
-                  <div className="text-xs text-gray-500">View all your past votes</div>
+                <h3 className="text-lg font-semibold text-gray-900">Academic Profile</h3>
+              </div>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Course:</span>
+                  <span className="font-medium">{courseInfo?.fullName || user.course}</span>
                 </div>
-              </button>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Year:</span>
+                  <span className="font-medium">Year {user.year}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Section:</span>
+                  <span className="font-medium">Section {user.section}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">College:</span>
+                  <span className="font-medium">{user.collegeName}</span>
+                </div>
+              </div>
+            </Card>
 
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left"
-              >
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <Calendar className="h-4 w-4 text-gray-600" />
+            {/* Voting Stats Card */}
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
                 </div>
+                <h3 className="text-lg font-semibold text-gray-900">Voting Stats</h3>
+              </div>
+              <div className="space-y-4">
                 <div>
-                  <div className="font-medium text-gray-900">Refresh Elections</div>
-                  <div className="text-xs text-gray-500">Check for new elections</div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-500">Participation Rate</span>
+                    <span className="font-medium">{totalParticipationRate}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-600 h-2 rounded-full"
+                      style={{ width: `${totalParticipationRate}%` }}
+                    ></div>
+                  </div>
                 </div>
-              </button>
-            </div>
-          </Card>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">{votedCount}</div>
+                    <div className="text-xs text-gray-500">Votes Cast</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">{elections.length - votedCount}</div>
+                    <div className="text-xs text-gray-500">Pending</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={() => navigate(ROUTES.MY_VOTES)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all text-left"
+                >
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Vote className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">My Voting History</div>
+                    <div className="text-xs text-gray-500">View all your past votes</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => window.location.reload()}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left"
+                >
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">Refresh Elections</div>
+                    <div className="text-xs text-gray-500">Check for new elections</div>
+                  </div>
+                </button>
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
 
